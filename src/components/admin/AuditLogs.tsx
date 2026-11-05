@@ -81,9 +81,10 @@ export const AuditLogs: React.FC = () => {
         return { label: action, color: 'bg-blue-50 text-blue-800 border-blue-300 font-extrabold' };
       case 'CREATE_USER':
       case 'UPDATE_USER':
+      case 'DELETE_USER':
       case 'ACTIVATE_USER':
       case 'DEACTIVATE_USER':
-        return { label: action, color: 'bg-purple-50 text-purple-800 border-purple-300 font-extrabold' };
+        return { label: action === 'DELETE_USER' ? 'HAPUS USER' : action, color: action === 'DELETE_USER' ? 'bg-rose-50 text-rose-800 border-rose-300 font-extrabold' : 'bg-purple-50 text-purple-800 border-purple-300 font-extrabold' };
       case 'RESET_PASSWORD':
         return { label: 'RESET PASSWORD', color: 'bg-amber-50 text-amber-800 border-amber-300 font-extrabold' };
       default:
@@ -156,6 +157,7 @@ export const AuditLogs: React.FC = () => {
           <option value="CREATE_APP">TAMBAH APLIKASI</option>
           <option value="UPDATE_APP">UBAH APLIKASI</option>
           <option value="CREATE_USER">TAMBAH USER</option>
+          <option value="DELETE_USER">HAPUS USER</option>
           <option value="RESET_PASSWORD">RESET PASSWORD</option>
         </select>
       </div>

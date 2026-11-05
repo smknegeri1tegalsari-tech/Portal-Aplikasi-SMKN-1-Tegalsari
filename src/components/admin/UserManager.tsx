@@ -14,6 +14,7 @@ import {
   Save,
   X,
   ShieldCheck,
+  Trash2,
 } from 'lucide-react';
 import { User, UserRole, Application } from '../../types';
 import { useAuth } from '../../context/AuthContext';
@@ -35,6 +36,7 @@ export const UserManager: React.FC<UserManagerProps> = ({ applications }) => {
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
   const [targetResetUser, setTargetResetUser] = useState<User | null>(null);
   const [newPassword, setNewPassword] = useState('');
+  const [deleteConfirmUser, setDeleteConfirmUser] = useState<User | null>(null);
 
   // Form states
   const [formUsername, setFormUsername] = useState('');
@@ -211,6 +213,33 @@ export const UserManager: React.FC<UserManagerProps> = ({ applications }) => {
       fetchUsers();
     } catch (err) {
       console.error('Toggle active error:', err);
+    }
+  };
+
+  const handleDeleteUser = async () => {
+    if (!deleteConfirmUser) return;
+    setIsSubmitting(true);
+    setFeedbackMessage(null);
+    try {
+      const res = await fetch(`/api/users/${deleteConfirmUser.id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setFeedbackMessage({ type: 'error', text: data.error || 'Gagal menghapus akun pengguna' });
+        setIsSubmitting(false);
+        return;
+      }
+      setFeedbackMessage({ type: 'success', text: `Akun @${deleteConfirmUser.username} (${deleteConfirmUser.fullName}) berhasil dihapus.` });
+      setDeleteConfirmUser(null);
+      fetchUsers();
+      setTimeout(() => setFeedbackMessage(null), 4000);
+    } catch (err) {
+      console.error('Delete user error:', err);
+      setFeedbackMessage({ type: 'error', text: 'Terjadi gangguan jaringan saat menghapus akun.' });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -398,6 +427,19 @@ export const UserManager: React.FC<UserManagerProps> = ({ applications }) => {
                           >
                             <Edit className="w-3.5 h-3.5" />
                           </button>
+                          <button
+                            type="button"
+                            onClick={() => setDeleteConfirmUser(u)}
+                            disabled={isCurrent}
+                            className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                              isCurrent
+                                ? 'bg-slate-100 text-slate-300 cursor-not-allowed opacity-50'
+                                : 'bg-slate-100 hover:bg-rose-50 hover:text-rose-700 text-slate-600'
+                            }`}
+                            title={isCurrent ? 'Tidak bisa menghapus akun Anda sendiri' : 'Hapus Akun Pengguna'}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -408,6 +450,43 @@ export const UserManager: React.FC<UserManagerProps> = ({ applications }) => {
           </table>
         </div>
       </div>
+
+      {/* Delete User Confirmation Modal */}
+      {deleteConfirmUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-fadeIn">
+          <div className="w-full max-w-sm rounded-2xl bg-white border border-slate-200 p-6 text-slate-900 shadow-2xl">
+            <div className="w-10 h-10 rounded-xl bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center mx-auto mb-3">
+              <Trash2 className="w-5 h-5" />
+            </div>
+            <h3 className="text-base font-bold text-center text-slate-900 mb-1">
+              Hapus Akun Pengguna?
+            </h3>
+            <p className="text-xs text-slate-500 text-center mb-5 leading-relaxed">
+              Apakah Anda yakin ingin menghapus akun <span className="font-bold text-slate-900">@{deleteConfirmUser.username}</span> ({deleteConfirmUser.fullName})?
+              Tindakan ini bersifat permanen dan pengguna tidak dapat masuk ke portal lagi.
+            </p>
+
+            <div className="flex items-center gap-2.5">
+              <button
+                type="button"
+                onClick={() => setDeleteConfirmUser(null)}
+                disabled={isSubmitting}
+                className="flex-1 py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteUser}
+                disabled={isSubmitting}
+                className="flex-1 py-2 px-3 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-md shadow-rose-600/20 cursor-pointer disabled:opacity-60"
+              >
+                {isSubmitting ? 'Menghapus...' : 'Ya, Hapus Akun'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Reset Password Modal */}
       {isResetModalOpen && targetResetUser && (

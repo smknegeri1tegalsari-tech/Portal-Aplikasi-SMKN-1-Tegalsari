@@ -11,7 +11,7 @@
       "passwordHash": "ba52eb295cb43467d1c52fe9ca8254bfc2e916e7a26ca20c15921a665b9ab6aefe34beccf656f0c0b4578ee7572593dbf3f9e8ffb4ac8dcd57fceb56eb0743f1",
       "createdAt": "2026-01-01T00:00:00.000Z",
       "updatedAt": "2026-01-01T00:00:00.000Z",
-      "lastLoginAt": "2026-11-05T01:05:10.939Z"
+      "lastLoginAt": "2026-11-05T21:21:39.960Z"
     },
     {
       "id": "user-admin",
@@ -273,6 +273,72 @@
     }
   ],
   "accessLogs": [
+    {
+      "id": "log-1793913699960-dl99g",
+      "userId": "user-superadmin",
+      "username": "superadmin",
+      "role": "SUPER_ADMIN",
+      "action": "LOGIN",
+      "details": "Login berhasil melalui Portal Terpadu",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "curl/7.88.1",
+      "timestamp": "2026-11-05T21:21:39.960Z"
+    },
+    {
+      "id": "log-1793913695299-avytj",
+      "userId": "user-superadmin",
+      "username": "superadmin",
+      "role": "SUPER_ADMIN",
+      "action": "DELETE_USER",
+      "details": "Menghapus akun pengguna @test.delete (Test Akun Hapus)",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "curl/7.88.1",
+      "timestamp": "2026-11-05T21:21:35.299Z"
+    },
+    {
+      "id": "log-1793913695267-cme34",
+      "userId": "user-superadmin",
+      "username": "superadmin",
+      "role": "SUPER_ADMIN",
+      "action": "LOGIN",
+      "details": "Login berhasil melalui Portal Terpadu",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "curl/7.88.1",
+      "timestamp": "2026-11-05T21:21:35.267Z"
+    },
+    {
+      "id": "log-1793913681875-bjoke",
+      "userId": "user-superadmin",
+      "username": "superadmin",
+      "role": "SUPER_ADMIN",
+      "action": "CREATE_USER",
+      "details": "Menambahkan pengguna baru: Test Akun Hapus (@test.delete) dengan role USER",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "curl/7.88.1",
+      "timestamp": "2026-11-05T21:21:21.875Z"
+    },
+    {
+      "id": "log-1793913677902-ki274",
+      "userId": "user-superadmin",
+      "username": "superadmin",
+      "role": "SUPER_ADMIN",
+      "action": "LOGIN",
+      "details": "Login berhasil melalui Portal Terpadu",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "curl/7.88.1",
+      "timestamp": "2026-11-05T21:21:17.902Z"
+    },
+    {
+      "id": "log-1793913447659-rk0ua",
+      "userId": "user-superadmin",
+      "username": "superadmin",
+      "role": "SUPER_ADMIN",
+      "action": "LOGIN",
+      "details": "Login berhasil melalui Portal Terpadu",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "curl/7.88.1",
+      "timestamp": "2026-11-05T21:17:27.659Z"
+    },
     {
       "id": "log-1793840733971-yw8df",
       "userId": "user-siswa",

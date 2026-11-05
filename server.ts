@@ -1,4 +1,5 @@
-import express, { Request, Response, NextFunction } from 'express';
+import express from 'express';
+import type { Request, Response, NextFunction } from 'express';
 import path from 'path';
 import fs from 'fs';
 import crypto from 'crypto';
@@ -10,7 +11,7 @@ import {
   INITIAL_SETTINGS,
   INITIAL_USERS,
 } from './src/lib/schoolData.ts';
-import { Application, Category, AccessLog, PortalSettings, User, UserRole, DashboardStats } from './src/types/index.ts';
+import type { Application, Category, AccessLog, PortalSettings, User, UserRole, DashboardStats } from './src/types/index.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -726,6 +727,57 @@ async function startServer() {
     );
 
     res.json({ success: true, isActive: targetUser.isActive });
+  });
+
+  // DELETE /api/users/:id (Hapus Akun Pengguna)
+  app.delete('/api/users/:id', authenticateToken, requireAdmin, (req: Request, res: Response) => {
+    const currentUser = (req as any).user as User;
+    const targetUserId = req.params.id;
+
+    if (currentUser.id === targetUserId) {
+      res.status(400).json({ error: 'Anda tidak dapat menghapus akun Anda sendiri' });
+      return;
+    }
+
+    const userIndex = dbState.users.findIndex((u) => u.id === targetUserId);
+    if (userIndex === -1) {
+      res.status(404).json({ error: 'Pengguna tidak ditemukan' });
+      return;
+    }
+
+    const targetUser = dbState.users[userIndex];
+
+    if (targetUser.role === 'SUPER_ADMIN' && currentUser.role !== 'SUPER_ADMIN') {
+      res.status(403).json({ error: 'Hanya Super Admin yang berhak menghapus akun SUPER_ADMIN' });
+      return;
+    }
+
+    // Invalidate any active session for the deleted user
+    for (const [token, session] of activeSessions.entries()) {
+      if (session.userId === targetUserId) {
+        activeSessions.delete(token);
+      }
+    }
+
+    // Remove user from database
+    dbState.users.splice(userIndex, 1);
+    saveDb();
+
+    recordLog(
+      currentUser.id,
+      currentUser.username,
+      currentUser.role,
+      'DELETE_USER',
+      `Menghapus akun pengguna @${targetUser.username} (${targetUser.fullName})`,
+      undefined,
+      undefined,
+      req
+    );
+
+    res.json({
+      success: true,
+      message: `Akun @${targetUser.username} berhasil dihapus permanen`,
+    });
   });
 
   // --- CATEGORIES ENDPOINTS ---

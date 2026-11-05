@@ -50,6 +50,7 @@ export type AuditAction =
   | 'DELETE_APP'
   | 'CREATE_USER'
   | 'UPDATE_USER'
+  | 'DELETE_USER'
   | 'DEACTIVATE_USER'
   | 'ACTIVATE_USER'
   | 'RESET_PASSWORD'

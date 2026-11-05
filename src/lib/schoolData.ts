@@ -1,4 +1,4 @@
-import { Application, Category, PortalSettings, User } from '../types';
+import type { Application, Category, PortalSettings, User } from '../types/index.ts';
 
 export const SCHOOL_INFO = {
   name: 'SMKN 1 TEGALSARI',
