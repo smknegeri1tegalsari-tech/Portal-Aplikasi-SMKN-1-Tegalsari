@@ -11,7 +11,7 @@
       "passwordHash": "ba52eb295cb43467d1c52fe9ca8254bfc2e916e7a26ca20c15921a665b9ab6aefe34beccf656f0c0b4578ee7572593dbf3f9e8ffb4ac8dcd57fceb56eb0743f1",
       "createdAt": "2026-01-01T00:00:00.000Z",
       "updatedAt": "2026-01-01T00:00:00.000Z",
-      "lastLoginAt": "2026-11-05T21:37:56.568Z"
+      "lastLoginAt": "2026-11-05T21:43:29.428Z"
     },
     {
       "id": "user-admin",
@@ -273,6 +273,17 @@
     }
   ],
   "accessLogs": [
+    {
+      "id": "log-1793915009428-o3mkv",
+      "userId": "user-superadmin",
+      "username": "superadmin",
+      "role": "SUPER_ADMIN",
+      "action": "LOGIN",
+      "details": "Login berhasil melalui Portal Terpadu",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "curl/7.88.1",
+      "timestamp": "2026-11-05T21:43:29.428Z"
+    },
     {
       "id": "log-1793914682572-rfmux",
       "userId": "user-superadmin",
