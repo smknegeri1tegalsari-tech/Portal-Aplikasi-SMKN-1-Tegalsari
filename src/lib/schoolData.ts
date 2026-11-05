@@ -4,11 +4,11 @@ export const SCHOOL_INFO = {
   name: 'SMKN 1 TEGALSARI',
   fullName: 'SMK Negeri 1 Tegalsari Banyuwangi',
   motto: 'Maju, Berkarakter, Kompeten & Unggul',
-  address: 'Jl. KH. Syafa\'at Blokagung, Karangdoro, Kec. Tegalsari, Kabupaten Banyuwangi, Jawa Timur 68485',
+  address: 'Jl. KH. Abdul Majid No.09, Krajan 2, Tegalsari, Kec. Tegalsari, Kabupaten Banyuwangi, Jawa Timur 68491',
   website: 'https://smkn1tegalsari.sch.id',
   email: 'smknegeri1tegalsari@gmail.com',
-  phone: '(0333) 845123',
-  npsn: '20556214',
+  phone: '(0333) 2811000',
+  npsn: '20540177',
   akreditasi: 'A (Unggul)',
 };
 
