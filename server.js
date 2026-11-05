@@ -259,7 +259,7 @@ var INITIAL_USERS = [
 // server.ts
 var __filename = fileURLToPath(import.meta.url);
 var __dirname = path.dirname(__filename);
-var PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3e3;
+var PORT = parseInt(process.env.DEFAULT_APP_PORT || "3000", 10);
 var DB_FILE = path.join(__dirname, ".data-portal.json");
 function hashPassword(password, salt = "smkn1tegalsari_salt") {
   return crypto.pbkdf2Sync(password, salt, 1e3, 64, "sha512").toString("hex");
@@ -272,11 +272,56 @@ var dbState = {
   settings: INITIAL_SETTINGS
 };
 var activeSessions = /* @__PURE__ */ new Map();
+function ensureDefaultUsers() {
+  if (!dbState.users || dbState.users.length === 0) {
+    resetDefaultData();
+    return;
+  }
+  const defaultHash = hashPassword("admin123");
+  let superadmin = dbState.users.find(
+    (u) => u.username.toLowerCase() === "superadmin" || u.email.toLowerCase() === "smknegeri1tegalsari@gmail.com"
+  );
+  if (!superadmin) {
+    dbState.users.unshift({
+      id: "user-superadmin",
+      username: "superadmin",
+      email: "smknegeri1tegalsari@gmail.com",
+      fullName: "Drs. H. Administrator Utama",
+      role: "SUPER_ADMIN",
+      department: "Manajemen Puncak & Tim IT",
+      isActive: true,
+      passwordHash: defaultHash,
+      createdAt: (/* @__PURE__ */ new Date()).toISOString(),
+      updatedAt: (/* @__PURE__ */ new Date()).toISOString()
+    });
+    saveDb();
+  } else if (!superadmin.passwordHash) {
+    superadmin.passwordHash = defaultHash;
+    saveDb();
+  }
+  let admin = dbState.users.find((u) => u.username.toLowerCase() === "admin");
+  if (!admin) {
+    dbState.users.push({
+      id: "user-admin",
+      username: "admin",
+      email: "admin.it@smkn1tegalsari.sch.id",
+      fullName: "Bambang Irawan, S.Kom.",
+      role: "ADMIN",
+      department: "Pengelola IT & Jaringan",
+      isActive: true,
+      passwordHash: defaultHash,
+      createdAt: (/* @__PURE__ */ new Date()).toISOString(),
+      updatedAt: (/* @__PURE__ */ new Date()).toISOString()
+    });
+    saveDb();
+  }
+}
 function loadDb() {
   try {
     if (fs.existsSync(DB_FILE)) {
       const raw = fs.readFileSync(DB_FILE, "utf-8");
       dbState = JSON.parse(raw);
+      ensureDefaultUsers();
       console.log(`[Database] Loaded existing database with ${dbState.applications.length} apps, ${dbState.users.length} users.`);
       return;
     }
@@ -391,30 +436,56 @@ function requireSuperAdmin(req, res, next) {
 async function startServer() {
   loadDb();
   const app = express();
+  app.set("trust proxy", 1);
   app.use(express.json());
+  app.use((req, res, next) => {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    if (req.method === "OPTIONS") {
+      res.sendStatus(200);
+      return;
+    }
+    next();
+  });
+  app.get("/api/health", (_req, res) => {
+    res.json({
+      status: "ok",
+      service: "PORTAL_TERPADU_SMKN1_TEGALSARI",
+      timestamp: (/* @__PURE__ */ new Date()).toISOString(),
+      uptime: process.uptime(),
+      port: PORT,
+      usersCount: dbState.users.length,
+      appsCount: dbState.applications.length
+    });
+  });
   app.post("/api/auth/login", (req, res) => {
     const { username, password } = req.body;
     if (!username || !password) {
-      res.status(400).json({ error: "Username dan password wajib diisi" });
+      res.status(400).json({ error: "Username dan kata sandi wajib diisi" });
       return;
     }
     const cleanUsername = String(username).trim().toLowerCase();
+    const cleanPassword = String(password);
+    const trimmedPassword = cleanPassword.trim();
     const user = dbState.users.find(
       (u) => u.username.toLowerCase() === cleanUsername || u.email.toLowerCase() === cleanUsername
     );
     if (!user) {
-      res.status(401).json({ error: "Username atau password salah" });
+      res.status(401).json({ error: "Username atau email tidak terdaftar di sistem portal" });
       return;
     }
     if (!user.isActive) {
       recordLog(user.id, user.username, user.role, "LOGIN", "Percobaan login ke akun yang dinonaktifkan", void 0, void 0, req);
-      res.status(403).json({ error: "Akun dinonaktifkan oleh administrator. Hubungi tim IT." });
+      res.status(403).json({ error: "Akun Anda dinonaktifkan oleh administrator sekolah. Hubungi Tim IT SMKN 1 Tegalsari." });
       return;
     }
-    const inputHash = hashPassword(password);
-    if (user.passwordHash !== inputHash) {
-      recordLog(user.id, user.username, user.role, "LOGIN", "Gagal login: Password salah", void 0, void 0, req);
-      res.status(401).json({ error: "Username atau password salah" });
+    const inputHash = hashPassword(cleanPassword);
+    const trimmedHash = hashPassword(trimmedPassword);
+    const isPasswordMatch = user.passwordHash === inputHash || user.passwordHash === trimmedHash;
+    if (!isPasswordMatch) {
+      recordLog(user.id, user.username, user.role, "LOGIN", "Gagal login: Kata sandi salah", void 0, void 0, req);
+      res.status(401).json({ error: "Kata sandi tidak sesuai. Silakan periksa kembali kata sandi Anda." });
       return;
     }
     const token = crypto.randomBytes(32).toString("hex");
@@ -439,6 +510,79 @@ async function startServer() {
     res.json({
       success: true,
       message: "Login berhasil",
+      token,
+      user: safeUser
+    });
+  });
+  app.post("/api/auth/google", (req, res) => {
+    const { email, fullName } = req.body;
+    if (!email) {
+      res.status(400).json({ error: "Email Google wajib disertakan" });
+      return;
+    }
+    const cleanEmail = String(email).trim().toLowerCase();
+    let user = dbState.users.find(
+      (u) => u.email.toLowerCase() === cleanEmail || u.username.toLowerCase() === cleanEmail.split("@")[0]
+    );
+    const isSchoolAdminEmail = cleanEmail === "smknegeri1tegalsari@gmail.com";
+    if (!user) {
+      const usernameFromEmail = cleanEmail.split("@")[0].replace(/[^a-zA-Z0-9._-]/g, "");
+      const newRole = isSchoolAdminEmail ? "SUPER_ADMIN" : "USER";
+      user = {
+        id: `user-g-${Date.now()}`,
+        username: usernameFromEmail || `user_${Date.now()}`,
+        email: cleanEmail,
+        fullName: fullName ? String(fullName).trim() : cleanEmail,
+        role: newRole,
+        department: isSchoolAdminEmail ? "Manajemen Puncak & Tim IT" : "Warga SMKN 1 Tegalsari",
+        isActive: true,
+        passwordHash: hashPassword(crypto.randomBytes(16).toString("hex")),
+        createdAt: (/* @__PURE__ */ new Date()).toISOString(),
+        updatedAt: (/* @__PURE__ */ new Date()).toISOString()
+      };
+      dbState.users.push(user);
+      saveDb();
+      recordLog(
+        user.id,
+        user.username,
+        user.role,
+        "CREATE_USER",
+        `Pendaftaran otomatis via Google Sign-In: ${user.fullName} (${user.email})`,
+        void 0,
+        void 0,
+        req
+      );
+    }
+    if (isSchoolAdminEmail) {
+      user.role = "SUPER_ADMIN";
+      user.isActive = true;
+    }
+    if (!user.isActive) {
+      res.status(403).json({ error: "Akun Anda dinonaktifkan oleh administrator sekolah." });
+      return;
+    }
+    const token = crypto.randomBytes(32).toString("hex");
+    const expiresAt = Date.now() + 24 * 60 * 60 * 1e3;
+    activeSessions.set(token, { userId: user.id, expiresAt });
+    user.lastLoginAt = (/* @__PURE__ */ new Date()).toISOString();
+    saveDb();
+    recordLog(user.id, user.username, user.role, "LOGIN", `Login sukses via Google Account: ${user.email}`, void 0, void 0, req);
+    const safeUser = {
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      fullName: user.fullName,
+      role: user.role,
+      department: user.department,
+      allowedAppIds: user.allowedAppIds,
+      isActive: user.isActive,
+      lastLoginAt: user.lastLoginAt,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt
+    };
+    res.json({
+      success: true,
+      message: "Login Google berhasil",
       token,
       user: safeUser
     });
@@ -941,10 +1085,12 @@ async function startServer() {
     resetDefaultData();
     res.json({ success: true, message: "Data contoh berhasil dipulihkan ke pengaturan awal" });
   });
-  if (process.env.NODE_ENV === "production" && fs.existsSync(path.resolve(__dirname, "dist"))) {
-    app.use(express.static(path.resolve(__dirname, "dist")));
+  const distPath = path.resolve(__dirname, "dist");
+  const isProduction = process.env.NODE_ENV === "production" || process.env.npm_lifecycle_event === "start" || !fs.existsSync(path.resolve(__dirname, "vite.config.ts"));
+  if (isProduction && fs.existsSync(distPath)) {
+    app.use(express.static(distPath));
     app.get("*", (_req, res) => {
-      res.sendFile(path.resolve(__dirname, "dist", "index.html"));
+      res.sendFile(path.resolve(distPath, "index.html"));
     });
   } else {
     const vite = await createViteServer({

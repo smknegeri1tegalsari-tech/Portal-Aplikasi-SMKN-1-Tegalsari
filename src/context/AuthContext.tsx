@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User } from '../types';
-import { testConnection } from '../lib/firebase';
+import { auth, testConnection } from '../lib/firebase';
+import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 
 interface AuthContextType {
   currentUser: User | null;
@@ -8,6 +9,7 @@ interface AuthContextType {
   isLoading: boolean;
   error: string | null;
   login: (username: string, password: string) => Promise<boolean>;
+  loginWithGoogle: () => Promise<boolean>;
   logout: () => Promise<void>;
   isSuperAdmin: boolean;
   isAdmin: boolean;
@@ -19,19 +21,55 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const TOKEN_KEY = 'portal_smkn1_auth_token';
 
+// In-memory fallback if localStorage is disabled or restricted in iframe
+const memoryFallback: Record<string, string> = {};
+
+function safeGetStorage(key: string): string | null {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      return window.localStorage.getItem(key);
+    }
+  } catch (err) {
+    console.warn('[Storage] localStorage get restricted, using memory store', err);
+  }
+  return memoryFallback[key] || null;
+}
+
+function safeSetStorage(key: string, value: string): void {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      window.localStorage.setItem(key, value);
+    }
+  } catch (err) {
+    console.warn('[Storage] localStorage set restricted, using memory store', err);
+  }
+  memoryFallback[key] = value;
+}
+
+function safeRemoveStorage(key: string): void {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      window.localStorage.removeItem(key);
+    }
+  } catch (err) {
+    console.warn('[Storage] localStorage remove restricted', err);
+  }
+  delete memoryFallback[key];
+}
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(localStorage.getItem(TOKEN_KEY));
+  const [token, setToken] = useState<string | null>(() => safeGetStorage(TOKEN_KEY));
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   // Initial check & Firebase connectivity check
   useEffect(() => {
-    // Test Firebase connection as required by instructions
+    // Test Firebase connection
     testConnection().catch(() => {});
 
     const initAuth = async () => {
-      const storedToken = localStorage.getItem(TOKEN_KEY);
+      const storedToken = safeGetStorage(TOKEN_KEY);
       if (!storedToken) {
         setIsLoading(false);
         return;
@@ -49,7 +87,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setCurrentUser(data.user);
           setToken(storedToken);
         } else {
-          localStorage.removeItem(TOKEN_KEY);
+          safeRemoveStorage(TOKEN_KEY);
           setToken(null);
           setCurrentUser(null);
         }
@@ -77,19 +115,72 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || 'Login gagal. Periksa kembali username dan password.');
+        setError(data.error || 'Login gagal. Periksa kembali username dan kata sandi.');
         setIsLoading(false);
         return false;
       }
 
-      localStorage.setItem(TOKEN_KEY, data.token);
+      safeSetStorage(TOKEN_KEY, data.token);
       setToken(data.token);
       setCurrentUser(data.user);
       setIsLoading(false);
       return true;
     } catch (err) {
       console.error('Login error:', err);
-      setError('Gagal terhubung ke server. Pastikan koneksi internet stabil.');
+      setError('Gagal terhubung ke server portal. Pastikan koneksi internet stabil.');
+      setIsLoading(false);
+      return false;
+    }
+  };
+
+  const loginWithGoogle = async (): Promise<boolean> => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: 'select_account' });
+      const userCredential = await signInWithPopup(auth, provider);
+      const firebaseUser = userCredential.user;
+
+      if (!firebaseUser.email) {
+        setError('Akun Google tidak memiliki alamat email yang valid.');
+        setIsLoading(false);
+        return false;
+      }
+
+      const res = await fetch('/api/auth/google', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: firebaseUser.email,
+          fullName: firebaseUser.displayName || firebaseUser.email,
+          photoUrl: firebaseUser.photoURL,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || 'Autentikasi Google gagal diproses oleh server portal.');
+        setIsLoading(false);
+        return false;
+      }
+
+      safeSetStorage(TOKEN_KEY, data.token);
+      setToken(data.token);
+      setCurrentUser(data.user);
+      setIsLoading(false);
+      return true;
+    } catch (err: any) {
+      console.error('Google Sign-In error:', err);
+      if (err.code === 'auth/popup-closed-by-user') {
+        setError('Jendela masuk Google ditutup sebelum selesai.');
+      } else if (err.code === 'auth/cancelled-popup-request') {
+        setError('Permintaan login dibatalkan.');
+      } else {
+        setError('Gagal masuk dengan Google: ' + (err.message || 'Terjadi kesalahan sistem.'));
+      }
       setIsLoading(false);
       return false;
     }
@@ -108,7 +199,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (err) {
       console.warn('Logout notification error:', err);
     } finally {
-      localStorage.removeItem(TOKEN_KEY);
+      safeRemoveStorage(TOKEN_KEY);
       setToken(null);
       setCurrentUser(null);
     }
@@ -141,6 +232,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isLoading,
         error,
         login,
+        loginWithGoogle,
         logout,
         isSuperAdmin,
         isAdmin,
