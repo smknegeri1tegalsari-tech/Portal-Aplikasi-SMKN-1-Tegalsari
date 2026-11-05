@@ -1,0 +1,94 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default-deny safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper Primitives
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-\\.:]+$');
+    }
+
+    function isSuperAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email == 'smknegeri1tegalsari@gmail.com' ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'SUPER_ADMIN')
+      );
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        isSuperAdmin() ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'ADMIN')
+      );
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // 1. Users collection
+    match /users/{userId} {
+      allow get: if isSignedIn() && (isOwner(userId) || isAdmin());
+      allow list: if isSignedIn() && (isAdmin() || (resource.data.id == request.auth.uid));
+
+      // Admin can create or update users; super admin has full permissions
+      allow create: if isSignedIn() && (
+        isAdmin() ||
+        (isOwner(userId) && request.resource.data.role == 'USER')
+      ) && isValidId(userId);
+
+      allow update: if isSignedIn() && (
+        isAdmin() ||
+        (isOwner(userId) &&
+         request.resource.data.role == resource.data.role &&
+         request.resource.data.isActive == resource.data.isActive &&
+         request.resource.data.username == resource.data.username)
+      );
+
+      allow delete: if isSignedIn() && isSuperAdmin();
+    }
+
+    // 2. Applications collection
+    match /applications/{appId} {
+      allow get, list: if isSignedIn();
+
+      allow create: if isSignedIn() && isAdmin() && isValidId(appId);
+      allow update: if isSignedIn() && (
+        isAdmin() ||
+        // Allow regular users to update only openCount (stat tracking)
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['openCount', 'updatedAt']))
+      );
+      allow delete: if isSignedIn() && isAdmin();
+    }
+
+    // 3. Categories collection
+    match /categories/{categoryId} {
+      allow get, list: if isSignedIn();
+      allow create, update, delete: if isSignedIn() && isAdmin() && isValidId(categoryId);
+    }
+
+    // 4. Access Logs collection (Immutable audit trail)
+    match /access_logs/{logId} {
+      allow get, list: if isSignedIn() && isAdmin();
+      allow create: if isSignedIn() && isValidId(logId);
+      allow update, delete: if false; // Append-only audit logs
+    }
+
+    // 5. Settings collection
+    match /settings/{settingId} {
+      allow get, list: if isSignedIn();
+      allow create, update: if isSignedIn() && isAdmin() && isValidId(settingId);
+      allow delete: if isSignedIn() && isSuperAdmin();
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "name": "Portal Terpadu SMKN 1 Tegalsari",
+  "description": "Portal terpadu aplikasi internal SMKN 1 Tegalsari dengan autentikasi aman, manajemen hak akses multi-role, dan direktori aplikasi sekolah.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

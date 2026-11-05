@@ -1,0 +1,110 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile with role-based access control for SMKN 1 Tegalsari portal",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "username": { "type": "string", "minLength": 3, "maxLength": 50, "pattern": "^[a-zA-Z0-9_.-]+$" },
+        "email": { "type": "string", "maxLength": 128 },
+        "fullName": { "type": "string", "minLength": 2, "maxLength": 100 },
+        "role": { "type": "string", "enum": ["SUPER_ADMIN", "ADMIN", "USER"] },
+        "department": { "type": "string", "maxLength": 100 },
+        "allowedAppIds": { "type": "array", "description": "Specific app IDs allowed for this user or empty for role defaults" },
+        "isActive": { "type": "boolean" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" },
+        "lastLoginAt": { "type": "string" }
+      },
+      "required": ["username", "email", "fullName", "role", "isActive"]
+    },
+    "Application": {
+      "title": "Application",
+      "description": "Internal school web applications accessible through portal",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "description": { "type": "string", "maxLength": 500 },
+        "categoryId": { "type": "string", "maxLength": 64 },
+        "iconName": { "type": "string", "maxLength": 64 },
+        "targetUrl": { "type": "string", "maxLength": 512, "pattern": "^https?://.+" },
+        "allowedRoles": { "type": "array" },
+        "isActive": { "type": "boolean" },
+        "sortOrder": { "type": "number" },
+        "openCount": { "type": "number" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["name", "categoryId", "targetUrl", "allowedRoles", "isActive"]
+    },
+    "Category": {
+      "title": "Category",
+      "description": "Classification categories for school applications",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 64 },
+        "name": { "type": "string", "minLength": 2, "maxLength": 80 },
+        "description": { "type": "string", "maxLength": 255 },
+        "sortOrder": { "type": "number" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["name"]
+    },
+    "AccessLog": {
+      "title": "AccessLog",
+      "description": "Security audit logs of login and application opening events",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "username": { "type": "string", "maxLength": 80 },
+        "action": { "type": "string", "enum": ["LOGIN", "LOGOUT", "OPEN_APP", "CREATE_APP", "UPDATE_APP", "DELETE_APP", "CREATE_USER", "UPDATE_USER", "RESET_PASSWORD"] },
+        "targetAppId": { "type": "string", "maxLength": 128 },
+        "targetAppName": { "type": "string", "maxLength": 120 },
+        "ipAddress": { "type": "string", "maxLength": 64 },
+        "userAgent": { "type": "string", "maxLength": 300 },
+        "timestamp": { "type": "string" }
+      },
+      "required": ["username", "action", "timestamp"]
+    },
+    "Setting": {
+      "title": "Setting",
+      "description": "Global portal configurations and school metadata",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 64 },
+        "schoolName": { "type": "string", "maxLength": 128 },
+        "portalTitle": { "type": "string", "maxLength": 128 },
+        "logoUrl": { "type": "string", "maxLength": 512 },
+        "maintenanceMode": { "type": "boolean" },
+        "contactHelpdesk": { "type": "string", "maxLength": 128 },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["schoolName", "portalTitle"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User accounts and role metadata"
+    },
+    "/applications/{appId}": {
+      "schema": "Application",
+      "description": "Directory of internal school web applications"
+    },
+    "/categories/{categoryId}": {
+      "schema": "Category",
+      "description": "Application category groupings"
+    },
+    "/access_logs/{logId}": {
+      "schema": "AccessLog",
+      "description": "Audit trail for logins and application access"
+    },
+    "/settings/{settingId}": {
+      "schema": "Setting",
+      "description": "School portal global configuration"
+    }
+  }
+}

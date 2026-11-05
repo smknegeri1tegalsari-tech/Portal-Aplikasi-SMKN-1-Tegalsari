@@ -1,0 +1,348 @@
+{
+  "users": [
+    {
+      "id": "user-superadmin",
+      "username": "superadmin",
+      "email": "smknegeri1tegalsari@gmail.com",
+      "fullName": "Drs. H. Administrator Utama",
+      "role": "SUPER_ADMIN",
+      "department": "Manajemen Puncak & Tim IT",
+      "isActive": true,
+      "passwordHash": "ba52eb295cb43467d1c52fe9ca8254bfc2e916e7a26ca20c15921a665b9ab6aefe34beccf656f0c0b4578ee7572593dbf3f9e8ffb4ac8dcd57fceb56eb0743f1",
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z",
+      "lastLoginAt": "2026-11-05T01:05:10.939Z"
+    },
+    {
+      "id": "user-admin",
+      "username": "admin",
+      "email": "admin.it@smkn1tegalsari.sch.id",
+      "fullName": "Bambang Irawan, S.Kom.",
+      "role": "ADMIN",
+      "department": "Pengelola IT & Jaringan",
+      "isActive": true,
+      "passwordHash": "ba52eb295cb43467d1c52fe9ca8254bfc2e916e7a26ca20c15921a665b9ab6aefe34beccf656f0c0b4578ee7572593dbf3f9e8ffb4ac8dcd57fceb56eb0743f1",
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "user-guru",
+      "username": "guru.ahmad",
+      "email": "ahmad.fauzi@smkn1tegalsari.sch.id",
+      "fullName": "Ahmad Fauzi, S.Pd.",
+      "role": "USER",
+      "department": "Tenaga Pendidik / Guru Produktif",
+      "isActive": true,
+      "passwordHash": "b5ad9281710f0fecc3a7879a95d639c4b249d664ceacf8eb088c3adab241e3a96a7678fe8d940776cc3e0cf5d104cef4d330dc9e3df9f871804472cf2dad1b60",
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "user-siswa",
+      "username": "siswa.budi",
+      "email": "budi.santoso@siswa.smkn1tegalsari.sch.id",
+      "fullName": "Budi Santoso (XII RPL 1)",
+      "role": "USER",
+      "department": "Siswa / Rekayasa Perangkat Lunak",
+      "isActive": true,
+      "passwordHash": "9a22f0c7c58e3952980a551e5763e6214a05b7afc43b2426708e926a1b96e474961be1839ec305623ababcd212af9e83656d2ab2674a86562f614d406323b839",
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z",
+      "lastLoginAt": "2026-11-05T01:05:23.747Z"
+    }
+  ],
+  "applications": [
+    {
+      "id": "app-sis",
+      "name": "Sistem Informasi Sekolah",
+      "description": "Pusat integrasi informasi umum, kalender akademik, berita, dan pengumuman resmi SMKN 1 Tegalsari.",
+      "categoryId": "cat-administrasi",
+      "iconName": "GraduationCap",
+      "targetUrl": "https://sis.smkn1tegalsari.sch.id",
+      "allowedRoles": [
+        "SUPER_ADMIN",
+        "ADMIN",
+        "USER"
+      ],
+      "isActive": true,
+      "sortOrder": 1,
+      "openCount": 142,
+      "badge": "Utama",
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "app-sisarpras",
+      "name": "SISARPRAS SMKN 1 Tegalsari",
+      "description": "Sistem Informasi Sarana dan Prasarana sekolah, peminjaman alat praktik, inventaris bengkel dan lab.",
+      "categoryId": "cat-sarpras",
+      "iconName": "Building2",
+      "targetUrl": "https://sarpras.smkn1tegalsari.sch.id",
+      "allowedRoles": [
+        "SUPER_ADMIN",
+        "ADMIN"
+      ],
+      "isActive": true,
+      "sortOrder": 2,
+      "openCount": 89,
+      "badge": "Internal",
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "app-semakasari",
+      "name": "Aplikasi Ujian SEMAKASARI",
+      "description": "Portal Computer Based Test (CBT) resmi SMKN 1 Tegalsari untuk Penilaian Akhir Semester dan Asesmen Sumatif.",
+      "categoryId": "cat-akademik",
+      "iconName": "Laptop",
+      "targetUrl": "https://cbt.smkn1tegalsari.sch.id",
+      "allowedRoles": [
+        "SUPER_ADMIN",
+        "ADMIN",
+        "USER"
+      ],
+      "isActive": true,
+      "sortOrder": 3,
+      "openCount": 513,
+      "badge": "CBT Ujian",
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "app-esiska",
+      "name": "Aplikasi e-SISKA",
+      "description": "Sistem Informasi Praktik Kerja Lapangan (PKL), monitoring industri siswa vokasi, dan sertifikasi keahlian.",
+      "categoryId": "cat-kesiswaan",
+      "iconName": "Briefcase",
+      "targetUrl": "https://eslska.smkn1tegalsari.sch.id",
+      "allowedRoles": [
+        "SUPER_ADMIN",
+        "ADMIN",
+        "USER"
+      ],
+      "isActive": true,
+      "sortOrder": 4,
+      "openCount": 231,
+      "badge": "Vokasi/PKL",
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "app-kepegawaian",
+      "name": "Sistem Informasi Kepegawaian",
+      "description": "Manajemen berkas kepegawaian GTK, SK pembagian tugas mengajar, angka kredit, dan kenaikan pangkat.",
+      "categoryId": "cat-kepegawaian",
+      "iconName": "Users",
+      "targetUrl": "https://simpeg.smkn1tegalsari.sch.id",
+      "allowedRoles": [
+        "SUPER_ADMIN",
+        "ADMIN"
+      ],
+      "isActive": true,
+      "sortOrder": 5,
+      "openCount": 97,
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "app-data-siswa",
+      "name": "Aplikasi Manajemen Data Siswa",
+      "description": "Basis data terpadu profil peserta didik, data orang tua/wali, rekapitulasi NISN, dan riwayat mutasi.",
+      "categoryId": "cat-kesiswaan",
+      "iconName": "FolderCheck",
+      "targetUrl": "https://kesiswaan.smkn1tegalsari.sch.id",
+      "allowedRoles": [
+        "SUPER_ADMIN",
+        "ADMIN"
+      ],
+      "isActive": true,
+      "sortOrder": 6,
+      "openCount": 164,
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "app-perpustakaan",
+      "name": "Aplikasi Perpustakaan",
+      "description": "Sistem Otomasi Perpustakaan (SLiMS), katalog buku teks, modul praktik kejuruan, dan peminjaman online.",
+      "categoryId": "cat-administrasi",
+      "iconName": "BookOpen",
+      "targetUrl": "https://perpus.smkn1tegalsari.sch.id",
+      "allowedRoles": [
+        "SUPER_ADMIN",
+        "ADMIN",
+        "USER"
+      ],
+      "isActive": true,
+      "sortOrder": 7,
+      "openCount": 188,
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "app-jurnal-guru",
+      "name": "Aplikasi Jurnal Guru",
+      "description": "Pencatatan agenda harian tatap muka pengajaran, capaian modul ajar, dan catatan perkembangan peserta didik.",
+      "categoryId": "cat-akademik",
+      "iconName": "FileText",
+      "targetUrl": "https://jurnal.smkn1tegalsari.sch.id",
+      "allowedRoles": [
+        "SUPER_ADMIN",
+        "ADMIN",
+        "USER"
+      ],
+      "isActive": true,
+      "sortOrder": 8,
+      "openCount": 304,
+      "badge": "Harian GTK",
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "app-absensi",
+      "name": "Aplikasi Absensi",
+      "description": "Presensi digital real-time berbasis QR Code / geolokasi untuk guru, karyawan, dan seluruh siswa.",
+      "categoryId": "cat-kesiswaan",
+      "iconName": "Clock",
+      "targetUrl": "https://presensi.smkn1tegalsari.sch.id",
+      "allowedRoles": [
+        "SUPER_ADMIN",
+        "ADMIN",
+        "USER"
+      ],
+      "isActive": true,
+      "sortOrder": 9,
+      "openCount": 840,
+      "badge": "Presensi Harian",
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "app-administrasi",
+      "name": "Aplikasi Administrasi Sekolah",
+      "description": "Sistem surat menyurat digital, disposisi kepala sekolah, pengarsipan berkas dinas, dan ketatausahaan.",
+      "categoryId": "cat-administrasi",
+      "iconName": "ShieldCheck",
+      "targetUrl": "https://tu.smkn1tegalsari.sch.id",
+      "allowedRoles": [
+        "SUPER_ADMIN",
+        "ADMIN"
+      ],
+      "isActive": true,
+      "sortOrder": 10,
+      "openCount": 112,
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    }
+  ],
+  "categories": [
+    {
+      "id": "cat-akademik",
+      "name": "Akademik & Pembelajaran",
+      "description": "Sistem ujian, e-learning, jurnal mengajar, dan kurikulum sekolah",
+      "sortOrder": 1,
+      "createdAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "cat-kesiswaan",
+      "name": "Kesiswaan & Bimbingan",
+      "description": "Data kesiswaan, absensi siswa, kedisiplinan, dan ekstrakurikuler",
+      "sortOrder": 2,
+      "createdAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "cat-sarpras",
+      "name": "Sarana & Prasarana",
+      "description": "Inventaris bengkel, laboratorium, ruang kelas, dan aset sekolah",
+      "sortOrder": 3,
+      "createdAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "cat-kepegawaian",
+      "name": "Kepegawaian & SDM",
+      "description": "Data pendidik, tenaga kependidikan, SKP, dan administrasi guru",
+      "sortOrder": 4,
+      "createdAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "cat-administrasi",
+      "name": "Administrasi & Layanan",
+      "description": "Tata usaha, surat menyurat, perpustakaan, dan arsip digital",
+      "sortOrder": 5,
+      "createdAt": "2026-01-01T00:00:00.000Z"
+    }
+  ],
+  "accessLogs": [
+    {
+      "id": "log-1793840733971-yw8df",
+      "userId": "user-siswa",
+      "username": "siswa.budi",
+      "role": "USER",
+      "action": "OPEN_APP",
+      "details": "Akses Ditolak: Mencoba membuka SISARPRAS SMKN 1 Tegalsari tanpa izin hak akses.",
+      "targetAppId": "app-sisarpras",
+      "targetAppName": "SISARPRAS SMKN 1 Tegalsari",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "curl/7.88.1",
+      "timestamp": "2026-11-05T01:05:33.971Z"
+    },
+    {
+      "id": "log-1793840723747-8oji4",
+      "userId": "user-siswa",
+      "username": "siswa.budi",
+      "role": "USER",
+      "action": "LOGIN",
+      "details": "Login berhasil melalui Portal Terpadu",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "curl/7.88.1",
+      "timestamp": "2026-11-05T01:05:23.747Z"
+    },
+    {
+      "id": "log-1793840716273-1vsua",
+      "userId": "user-superadmin",
+      "username": "superadmin",
+      "role": "SUPER_ADMIN",
+      "action": "OPEN_APP",
+      "details": "Membuka aplikasi Aplikasi Ujian SEMAKASARI",
+      "targetAppId": "app-semakasari",
+      "targetAppName": "Aplikasi Ujian SEMAKASARI",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "curl/7.88.1",
+      "timestamp": "2026-11-05T01:05:16.273Z"
+    },
+    {
+      "id": "log-1793840710939-eqbnz",
+      "userId": "user-superadmin",
+      "username": "superadmin",
+      "role": "SUPER_ADMIN",
+      "action": "LOGIN",
+      "details": "Login berhasil melalui Portal Terpadu",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "curl/7.88.1",
+      "timestamp": "2026-11-05T01:05:10.939Z"
+    },
+    {
+      "id": "log-1793840699733-init",
+      "userId": "system",
+      "username": "system",
+      "role": "SUPER_ADMIN",
+      "action": "UPDATE_SETTINGS",
+      "details": "Sistem Portal Terpadu SMKN 1 Tegalsari diinisialisasi.",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Server-Init",
+      "timestamp": "2026-11-05T01:04:59.733Z"
+    }
+  ],
+  "settings": {
+    "id": "global-settings",
+    "schoolName": "SMK NEGERI 1 TEGALSARI",
+    "portalTitle": "PORTAL TERPADU APLIKASI",
+    "tagline": "Satu Gerbang Akses Seluruh Layanan & Sistem Informasi Sekolah",
+    "address": "Jl. KH. Syafa'at Blokagung, Karangdoro, Tegalsari, Banyuwangi",
+    "contactHelpdesk": "helpdesk@smkn1tegalsari.sch.id | +62 812-3456-7890",
+    "maintenanceMode": false,
+    "allowSelfRegistration": false,
+    "announcementText": "Selamat datang di Portal Terpadu SMKN 1 Tegalsari. Pastikan selalu logout setelah selesai menggunakan aplikasi.",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  }
+}
