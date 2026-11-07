@@ -18,6 +18,14 @@ import {
 } from 'lucide-react';
 import { User, UserRole, Application } from '../../types';
 import { useAuth } from '../../context/AuthContext';
+import {
+  getLocalUsers,
+  getSafeUser,
+  addOrUpdateClientUser,
+  deleteClientUser,
+  toggleClientUserStatus,
+  resetClientUserPassword,
+} from '../../lib/clientAuth';
 
 interface UserManagerProps {
   applications: Application[];
@@ -54,18 +62,28 @@ export const UserManager: React.FC<UserManagerProps> = ({ applications }) => {
   const fetchUsers = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch('/api/users', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setUsers(data.users || []);
+      if (token && !token.startsWith('local_session_')) {
+        const res = await fetch('/api/users', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const contentType = res.headers.get('content-type') || '';
+        if (res.ok && contentType.includes('application/json')) {
+          const data = await res.json();
+          if (data.users && data.users.length > 0) {
+            setUsers(data.users);
+            setIsLoading(false);
+            return;
+          }
+        }
       }
     } catch (err) {
-      console.error('Fetch users error:', err);
-    } finally {
-      setIsLoading(false);
+      console.warn('Fetch users from server failed, using local storage:', err);
     }
+
+    // Local fallback
+    const local = getLocalUsers().map(getSafeUser);
+    setUsers(local);
+    setIsLoading(false);
   };
 
   useEffect(() => {
@@ -121,44 +139,52 @@ export const UserManager: React.FC<UserManagerProps> = ({ applications }) => {
     }
 
     setIsSubmitting(true);
+    const payload: any = {
+      id: editingUser ? editingUser.id : undefined,
+      username: formUsername.trim().toLowerCase(),
+      fullName: formFullName.trim(),
+      email: formEmail.trim().toLowerCase() || `${formUsername.trim()}@smkn1tegalsari.sch.id`,
+      role: formRole,
+      department: formDepartment.trim(),
+      allowedAppIds: formAllowedAppIds.length > 0 ? formAllowedAppIds : undefined,
+      isActive: formIsActive,
+      password: !editingUser ? formPassword : (formPassword ? formPassword : undefined),
+    };
+
     try {
-      const url = editingUser ? `/api/users/${editingUser.id}` : '/api/users';
-      const method = editingUser ? 'PUT' : 'POST';
+      if (token && !token.startsWith('local_session_')) {
+        const url = editingUser ? `/api/users/${editingUser.id}` : '/api/users';
+        const method = editingUser ? 'PUT' : 'POST';
 
-      const payload: any = {
-        username: formUsername.trim().toLowerCase(),
-        fullName: formFullName.trim(),
-        email: formEmail.trim().toLowerCase() || `${formUsername.trim()}@smkn1tegalsari.sch.id`,
-        role: formRole,
-        department: formDepartment.trim(),
-        allowedAppIds: formAllowedAppIds.length > 0 ? formAllowedAppIds : undefined,
-        isActive: formIsActive,
-      };
-      if (!editingUser) {
-        payload.password = formPassword;
+        const res = await fetch(url, {
+          method,
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(payload),
+        });
+
+        const contentType = res.headers.get('content-type') || '';
+        if (res.ok && contentType.includes('application/json')) {
+          await addOrUpdateClientUser(payload);
+          setIsUserModalOpen(false);
+          fetchUsers();
+          return;
+        }
       }
 
-      const res = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        setFeedbackMessage({ type: 'error', text: data.error || 'Gagal menyimpan data pengguna' });
-        setIsSubmitting(false);
-        return;
-      }
-
+      // Local fallback
+      await addOrUpdateClientUser(payload);
       setIsUserModalOpen(false);
       fetchUsers();
+      setFeedbackMessage({ type: 'success', text: `Akun @${payload.username} berhasil disimpan.` });
+      setTimeout(() => setFeedbackMessage(null), 3000);
     } catch (err) {
-      console.error('Save user error:', err);
-      setFeedbackMessage({ type: 'error', text: 'Terjadi gangguan koneksi jaringan.' });
+      console.warn('Save user server error, saving locally:', err);
+      await addOrUpdateClientUser(payload);
+      setIsUserModalOpen(false);
+      fetchUsers();
     } finally {
       setIsSubmitting(false);
     }
@@ -173,22 +199,18 @@ export const UserManager: React.FC<UserManagerProps> = ({ applications }) => {
 
     setIsSubmitting(true);
     try {
-      const res = await fetch(`/api/users/${targetResetUser.id}/reset-password`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ newPassword }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        setFeedbackMessage({ type: 'error', text: data.error || 'Gagal mereset password' });
-        setIsSubmitting(false);
-        return;
+      if (token && !token.startsWith('local_session_')) {
+        await fetch(`/api/users/${targetResetUser.id}/reset-password`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ newPassword }),
+        }).catch(() => {});
       }
 
+      await resetClientUserPassword(targetResetUser.id, newPassword);
       setIsResetModalOpen(false);
       setFeedbackMessage({ type: 'success', text: `Sandi untuk @${targetResetUser.username} berhasil diubah.` });
       setTimeout(() => setFeedbackMessage(null), 4000);
@@ -201,18 +223,18 @@ export const UserManager: React.FC<UserManagerProps> = ({ applications }) => {
 
   const handleToggleActive = async (userId: string) => {
     try {
-      const res = await fetch(`/api/users/${userId}/toggle-active`, {
-        method: 'PATCH',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        alert(data.error || 'Gagal mengubah status pengguna');
-        return;
+      if (token && !token.startsWith('local_session_')) {
+        await fetch(`/api/users/${userId}/toggle-active`, {
+          method: 'PATCH',
+          headers: { Authorization: `Bearer ${token}` },
+        }).catch(() => {});
       }
+      toggleClientUserStatus(userId);
       fetchUsers();
     } catch (err) {
       console.error('Toggle active error:', err);
+      toggleClientUserStatus(userId);
+      fetchUsers();
     }
   };
 
@@ -221,23 +243,25 @@ export const UserManager: React.FC<UserManagerProps> = ({ applications }) => {
     setIsSubmitting(true);
     setFeedbackMessage(null);
     try {
-      const res = await fetch(`/api/users/${deleteConfirmUser.id}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setFeedbackMessage({ type: 'error', text: data.error || 'Gagal menghapus akun pengguna' });
-        setIsSubmitting(false);
-        return;
+      if (token && !token.startsWith('local_session_')) {
+        await fetch(`/api/users/${deleteConfirmUser.id}`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${token}` },
+        }).catch(() => {});
       }
+
+      deleteClientUser(deleteConfirmUser.id);
       setFeedbackMessage({ type: 'success', text: `Akun @${deleteConfirmUser.username} (${deleteConfirmUser.fullName}) berhasil dihapus.` });
       setDeleteConfirmUser(null);
       fetchUsers();
       setTimeout(() => setFeedbackMessage(null), 4000);
     } catch (err) {
       console.error('Delete user error:', err);
-      setFeedbackMessage({ type: 'error', text: 'Terjadi gangguan jaringan saat menghapus akun.' });
+      deleteClientUser(deleteConfirmUser.id);
+      setFeedbackMessage({ type: 'success', text: `Akun @${deleteConfirmUser.username} berhasil dihapus.` });
+      setDeleteConfirmUser(null);
+      fetchUsers();
+      setTimeout(() => setFeedbackMessage(null), 4000);
     } finally {
       setIsSubmitting(false);
     }

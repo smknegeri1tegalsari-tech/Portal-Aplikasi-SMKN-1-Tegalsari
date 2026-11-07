@@ -8,10 +8,10 @@
       "role": "SUPER_ADMIN",
       "department": "Manajemen Puncak & Tim IT",
       "isActive": true,
-      "passwordHash": "b3bef1ba8aae3304610b886b73d3e8faf2e094168d30f2c47b7ab7610192af874811b215d7891b46f93e4cc2bcf6e99c0ca4bba525c97d86b9019204877eff8a",
+      "passwordHash": "ba52eb295cb43467d1c52fe9ca8254bfc2e916e7a26ca20c15921a665b9ab6aefe34beccf656f0c0b4578ee7572593dbf3f9e8ffb4ac8dcd57fceb56eb0743f1",
       "createdAt": "2026-01-01T00:00:00.000Z",
       "updatedAt": "2026-01-01T00:00:00.000Z",
-      "lastLoginAt": "2026-11-07T04:22:13.946Z"
+      "lastLoginAt": "2026-11-07T04:37:20.346Z"
     },
     {
       "id": "user-admin",
@@ -274,6 +274,28 @@
     }
   ],
   "accessLogs": [
+    {
+      "id": "log-1794026240347-kdxes",
+      "userId": "user-superadmin",
+      "username": "superadmin",
+      "role": "SUPER_ADMIN",
+      "action": "LOGIN",
+      "details": "Login berhasil melalui Portal Terpadu",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "curl/7.88.1",
+      "timestamp": "2026-11-07T04:37:20.347Z"
+    },
+    {
+      "id": "log-1794025975432-enyrt",
+      "userId": "user-superadmin",
+      "username": "superadmin",
+      "role": "SUPER_ADMIN",
+      "action": "LOGIN",
+      "details": "Login berhasil melalui Portal Terpadu",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "curl/7.88.1",
+      "timestamp": "2026-11-07T04:32:55.432Z"
+    },
     {
       "id": "log-1794025333994-8ypc1",
       "userId": "user-siswa",
