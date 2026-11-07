@@ -46,11 +46,11 @@ export const LoginPage: React.FC<LoginPageProps> = ({
       return;
     }
 
-    const success = await login(cleanUsername, password);
-    if (success) {
+    const result = await login(cleanUsername, password);
+    if (result.success) {
       if (onSuccess) onSuccess();
-    } else if (!authError) {
-      setClientError('Username atau kata sandi yang Anda masukkan tidak sesuai.');
+    } else {
+      setClientError(result.error || 'Username atau kata sandi yang Anda masukkan tidak sesuai.');
     }
   };
 
@@ -74,7 +74,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
               title="Kembali ke halaman utama katalog"
             >
               <ArrowLeft className="w-4 h-4 text-emerald-600" />
-              <span className="hidden sm:inline">Katalog Aplikasi</span>
+              <span className="hidden sm:inline">Aplikasi dan Layanan Sekolah</span>
             </button>
           )}
           <OfficialLogo size="md" />

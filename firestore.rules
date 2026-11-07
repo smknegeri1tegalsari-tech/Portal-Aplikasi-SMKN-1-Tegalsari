@@ -90,5 +90,10 @@ service cloud.firestore {
       allow create, update: if isSignedIn() && isAdmin() && isValidId(settingId);
       allow delete: if isSignedIn() && isSuperAdmin();
     }
+
+    // 6. Test connection probe
+    match /test/connection {
+      allow read: if true;
+    }
   }
 }

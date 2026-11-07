@@ -8,7 +8,7 @@ interface AuthContextType {
   token: string | null;
   isLoading: boolean;
   error: string | null;
-  login: (username: string, password: string) => Promise<boolean>;
+  login: (username: string, password: string) => Promise<{ success: boolean; error?: string }>;
   loginWithGoogle: () => Promise<boolean>;
   logout: () => Promise<void>;
   isSuperAdmin: boolean;
@@ -101,7 +101,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     initAuth();
   }, []);
 
-  const login = async (username: string, password: string): Promise<boolean> => {
+  const login = async (username: string, password: string): Promise<{ success: boolean; error?: string }> => {
     setIsLoading(true);
     setError(null);
 
@@ -115,21 +115,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || 'Login gagal. Periksa kembali username dan kata sandi.');
+        const errorMsg = data.error || 'Login gagal. Periksa kembali username dan kata sandi.';
+        setError(errorMsg);
         setIsLoading(false);
-        return false;
+        return { success: false, error: errorMsg };
       }
 
       safeSetStorage(TOKEN_KEY, data.token);
       setToken(data.token);
       setCurrentUser(data.user);
       setIsLoading(false);
-      return true;
-    } catch (err) {
+      return { success: true };
+    } catch (err: any) {
       console.error('Login error:', err);
-      setError('Gagal terhubung ke server portal. Pastikan koneksi internet stabil.');
+      const errorMsg = 'Gagal terhubung ke server portal. Pastikan koneksi internet stabil.';
+      setError(errorMsg);
       setIsLoading(false);
-      return false;
+      return { success: false, error: errorMsg };
     }
   };
 

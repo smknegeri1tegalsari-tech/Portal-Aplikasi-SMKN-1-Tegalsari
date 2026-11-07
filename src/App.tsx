@@ -308,7 +308,7 @@ function PortalAppContent() {
               </div>
 
               <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight leading-tight">
-                Katalog Aplikasi & Layanan Sekolah
+                Aplikasi dan Layanan Sekolah
               </h1>
               <p className="text-xs sm:text-sm text-emerald-100/90 mt-2 leading-relaxed">
                 Seluruh aplikasi internal SMKN 1 Tegalsari terintegrasi di sini. Pilih aplikasi di bawah untuk membuka sistem—Anda akan diarahkan untuk login menggunakan akun resmi.
