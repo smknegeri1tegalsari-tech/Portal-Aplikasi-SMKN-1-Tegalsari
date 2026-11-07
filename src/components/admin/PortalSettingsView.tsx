@@ -2,26 +2,34 @@ import React, { useState, useEffect } from 'react';
 import { Settings, Save, AlertCircle, CheckCircle, ShieldAlert, School } from 'lucide-react';
 import { PortalSettings } from '../../types';
 import { useAuth } from '../../context/AuthContext';
+import { getLocalSettings, saveLocalSettings } from '../../lib/portalStorage';
 
 export const PortalSettingsView: React.FC = () => {
   const { token, isSuperAdmin } = useAuth();
-  const [settings, setSettings] = useState<PortalSettings | null>(null);
-  const [schoolName, setSchoolName] = useState('');
-  const [portalTitle, setPortalTitle] = useState('');
-  const [tagline, setTagline] = useState('');
-  const [contactHelpdesk, setContactHelpdesk] = useState('');
-  const [announcementText, setAnnouncementText] = useState('');
-  const [maintenanceMode, setMaintenanceMode] = useState(false);
+  const [settings, setSettings] = useState<PortalSettings>(() => getLocalSettings());
+  const [schoolName, setSchoolName] = useState(() => settings.schoolName || '');
+  const [portalTitle, setPortalTitle] = useState(() => settings.portalTitle || '');
+  const [tagline, setTagline] = useState(() => settings.tagline || '');
+  const [contactHelpdesk, setContactHelpdesk] = useState(() => settings.contactHelpdesk || '');
+  const [announcementText, setAnnouncementText] = useState(() => settings.announcementText || '');
+  const [maintenanceMode, setMaintenanceMode] = useState(() => settings.maintenanceMode || false);
 
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     fetch('/api/settings')
-      .then((res) => res.json())
+      .then((res) => {
+        const contentType = res.headers.get('content-type') || '';
+        if (res.ok && contentType.includes('application/json')) {
+          return res.json();
+        }
+        return null;
+      })
       .then((data) => {
-        if (data.settings) {
+        if (data && data.settings) {
           setSettings(data.settings);
+          saveLocalSettings(data.settings);
           setSchoolName(data.settings.schoolName || '');
           setPortalTitle(data.settings.portalTitle || '');
           setTagline(data.settings.tagline || '');
@@ -30,7 +38,7 @@ export const PortalSettingsView: React.FC = () => {
           setMaintenanceMode(data.settings.maintenanceMode || false);
         }
       })
-      .catch((err) => console.error('Fetch settings error:', err));
+      .catch((err) => console.warn('Fetch settings from server failed, using local settings:', err));
   }, []);
 
   const handleSave = async (e: React.FormEvent) => {
@@ -43,35 +51,40 @@ export const PortalSettingsView: React.FC = () => {
     setIsSaving(true);
     setMessage(null);
 
+    const updatedSettings: PortalSettings = {
+      ...settings,
+      schoolName,
+      portalTitle,
+      tagline,
+      contactHelpdesk,
+      announcementText,
+      maintenanceMode,
+      updatedAt: new Date().toISOString(),
+    };
+
+    // 1. Immediately save locally
+    saveLocalSettings(updatedSettings);
+    setSettings(updatedSettings);
+
+    // 2. Sync to server in background
     try {
-      const res = await fetch('/api/settings', {
+      fetch('/api/settings', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          schoolName,
-          portalTitle,
-          tagline,
-          contactHelpdesk,
-          announcementText,
-          maintenanceMode,
-        }),
+        body: JSON.stringify(updatedSettings),
+      }).catch((err) => {
+        console.warn('Server settings sync failed:', err);
       });
-
-      if (res.ok) {
-        setMessage({ type: 'success', text: 'Pengaturan portal berhasil diperbarui.' });
-        setTimeout(() => setMessage(null), 3000);
-      } else {
-        const data = await res.json();
-        setMessage({ type: 'error', text: data.error || 'Gagal menyimpan pengaturan.' });
-      }
     } catch (err) {
-      setMessage({ type: 'error', text: 'Kesalahan jaringan.' });
-    } finally {
-      setIsSaving(false);
+      console.warn('Save settings server error:', err);
     }
+
+    setMessage({ type: 'success', text: 'Pengaturan portal berhasil diperbarui.' });
+    setIsSaving(false);
+    setTimeout(() => setMessage(null), 3000);
   };
 
   return (

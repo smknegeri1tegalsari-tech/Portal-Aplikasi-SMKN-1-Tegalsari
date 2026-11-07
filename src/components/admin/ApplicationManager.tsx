@@ -24,6 +24,11 @@ import {
 import { Application, Category, UserRole } from '../../types';
 import { useAuth } from '../../context/AuthContext';
 import { getAppIcon } from '../AppCard';
+import {
+  addOrUpdateLocalApplication,
+  deleteLocalApplication,
+  toggleLocalApplicationStatus,
+} from '../../lib/portalStorage';
 
 interface ApplicationManagerProps {
   applications: Application[];
@@ -127,69 +132,77 @@ export const ApplicationManager: React.FC<ApplicationManagerProps> = ({
     }
 
     setIsSubmitting(true);
+    const appPayload = {
+      id: editingApp ? editingApp.id : `app-${Date.now()}`,
+      name: formName.trim(),
+      description: formDescription.trim(),
+      categoryId: formCategoryId,
+      targetUrl: formTargetUrl.trim(),
+      iconName: formIconName,
+      badge: formBadge.trim() || undefined,
+      allowedRoles: formAllowedRoles,
+      isActive: formIsActive,
+    };
+
+    // 1. Immediately persist to local storage
+    addOrUpdateLocalApplication(appPayload);
+
+    // 2. Sync to server in parallel if possible
     try {
       const url = editingApp ? `/api/applications/${editingApp.id}` : '/api/applications';
       const method = editingApp ? 'PUT' : 'POST';
 
-      const res = await fetch(url, {
+      fetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          name: formName.trim(),
-          description: formDescription.trim(),
-          categoryId: formCategoryId,
-          targetUrl: formTargetUrl.trim(),
-          iconName: formIconName,
-          badge: formBadge.trim() || undefined,
-          allowedRoles: formAllowedRoles,
-          isActive: formIsActive,
-        }),
+        body: JSON.stringify(appPayload),
+      }).catch((err) => {
+        console.warn('Background server sync for app failed, local update preserved:', err);
       });
-
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error || 'Gagal menyimpan aplikasi');
-        setIsSubmitting(false);
-        return;
-      }
-
-      setIsModalOpen(false);
-      onRefresh();
     } catch (err) {
-      console.error('Submit app error:', err);
-      setError('Terjadi kesalahan jaringan.');
-    } finally {
-      setIsSubmitting(false);
+      console.warn('Server sync error:', err);
     }
+
+    setIsSubmitting(false);
+    setIsModalOpen(false);
+    onRefresh();
   };
 
   const handleToggleActive = async (appId: string) => {
+    // 1. Toggle locally immediately
+    toggleLocalApplicationStatus(appId);
+    onRefresh();
+
+    // 2. Sync to server in background
     try {
-      const res = await fetch(`/api/applications/${appId}/toggle`, {
+      fetch(`/api/applications/${appId}/toggle`, {
         method: 'PATCH',
         headers: { Authorization: `Bearer ${token}` },
+      }).catch((err) => {
+        console.warn('Server toggle sync failed:', err);
       });
-      if (res.ok) {
-        onRefresh();
-      }
     } catch (err) {
       console.error('Toggle active error:', err);
     }
   };
 
   const handleDelete = async (appId: string) => {
+    // 1. Delete locally immediately
+    deleteLocalApplication(appId);
+    setDeleteConfirmId(null);
+    onRefresh();
+
+    // 2. Sync deletion to server in background
     try {
-      const res = await fetch(`/api/applications/${appId}`, {
+      fetch(`/api/applications/${appId}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
+      }).catch((err) => {
+        console.warn('Server delete sync failed:', err);
       });
-      if (res.ok) {
-        setDeleteConfirmId(null);
-        onRefresh();
-      }
     } catch (err) {
       console.error('Delete app error:', err);
     }

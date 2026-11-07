@@ -10,8 +10,7 @@
       "isActive": true,
       "passwordHash": "ba52eb295cb43467d1c52fe9ca8254bfc2e916e7a26ca20c15921a665b9ab6aefe34beccf656f0c0b4578ee7572593dbf3f9e8ffb4ac8dcd57fceb56eb0743f1",
       "createdAt": "2026-01-01T00:00:00.000Z",
-      "updatedAt": "2026-01-01T00:00:00.000Z",
-      "lastLoginAt": "2026-11-07T04:37:20.346Z"
+      "updatedAt": "2026-01-01T00:00:00.000Z"
     },
     {
       "id": "user-admin",
@@ -35,8 +34,7 @@
       "isActive": true,
       "passwordHash": "b5ad9281710f0fecc3a7879a95d639c4b249d664ceacf8eb088c3adab241e3a96a7678fe8d940776cc3e0cf5d104cef4d330dc9e3df9f871804472cf2dad1b60",
       "createdAt": "2026-01-01T00:00:00.000Z",
-      "updatedAt": "2026-01-01T00:00:00.000Z",
-      "lastLoginAt": "2026-11-07T04:22:13.964Z"
+      "updatedAt": "2026-01-01T00:00:00.000Z"
     },
     {
       "id": "user-siswa",
@@ -48,8 +46,7 @@
       "isActive": true,
       "passwordHash": "9a22f0c7c58e3952980a551e5763e6214a05b7afc43b2426708e926a1b96e474961be1839ec305623ababcd212af9e83656d2ab2674a86562f614d406323b839",
       "createdAt": "2026-01-01T00:00:00.000Z",
-      "updatedAt": "2026-01-01T00:00:00.000Z",
-      "lastLoginAt": "2026-11-07T04:22:13.993Z"
+      "updatedAt": "2026-01-01T00:00:00.000Z"
     }
   ],
   "applications": [
@@ -104,7 +101,7 @@
       ],
       "isActive": true,
       "sortOrder": 3,
-      "openCount": 513,
+      "openCount": 512,
       "badge": "CBT Ujian",
       "createdAt": "2026-01-01T00:00:00.000Z",
       "updatedAt": "2026-01-01T00:00:00.000Z"
@@ -275,264 +272,7 @@
   ],
   "accessLogs": [
     {
-      "id": "log-1794026240347-kdxes",
-      "userId": "user-superadmin",
-      "username": "superadmin",
-      "role": "SUPER_ADMIN",
-      "action": "LOGIN",
-      "details": "Login berhasil melalui Portal Terpadu",
-      "ipAddress": "127.0.0.1",
-      "userAgent": "curl/7.88.1",
-      "timestamp": "2026-11-07T04:37:20.347Z"
-    },
-    {
-      "id": "log-1794025975432-enyrt",
-      "userId": "user-superadmin",
-      "username": "superadmin",
-      "role": "SUPER_ADMIN",
-      "action": "LOGIN",
-      "details": "Login berhasil melalui Portal Terpadu",
-      "ipAddress": "127.0.0.1",
-      "userAgent": "curl/7.88.1",
-      "timestamp": "2026-11-07T04:32:55.432Z"
-    },
-    {
-      "id": "log-1794025333994-8ypc1",
-      "userId": "user-siswa",
-      "username": "siswa.budi",
-      "role": "USER",
-      "action": "LOGIN",
-      "details": "Login berhasil melalui Portal Terpadu",
-      "ipAddress": "127.0.0.1",
-      "userAgent": "curl/7.88.1",
-      "timestamp": "2026-11-07T04:22:13.994Z"
-    },
-    {
-      "id": "log-1794025333964-ijglq",
-      "userId": "user-guru",
-      "username": "guru.ahmad",
-      "role": "USER",
-      "action": "LOGIN",
-      "details": "Login berhasil melalui Portal Terpadu",
-      "ipAddress": "127.0.0.1",
-      "userAgent": "curl/7.88.1",
-      "timestamp": "2026-11-07T04:22:13.964Z"
-    },
-    {
-      "id": "log-1794025333946-4vdpu",
-      "userId": "user-superadmin",
-      "username": "superadmin",
-      "role": "SUPER_ADMIN",
-      "action": "LOGIN",
-      "details": "Login berhasil melalui Portal Terpadu",
-      "ipAddress": "127.0.0.1",
-      "userAgent": "curl/7.88.1",
-      "timestamp": "2026-11-07T04:22:13.946Z"
-    },
-    {
-      "id": "log-1794025333928-uz30x",
-      "userId": "user-superadmin",
-      "username": "superadmin",
-      "role": "SUPER_ADMIN",
-      "action": "LOGIN",
-      "details": "Login berhasil melalui Portal Terpadu",
-      "ipAddress": "127.0.0.1",
-      "userAgent": "curl/7.88.1",
-      "timestamp": "2026-11-07T04:22:13.928Z"
-    },
-    {
-      "id": "log-1794025333909-ji2if",
-      "userId": "user-superadmin",
-      "username": "superadmin",
-      "role": "SUPER_ADMIN",
-      "action": "LOGIN",
-      "details": "Login berhasil melalui Portal Terpadu",
-      "ipAddress": "127.0.0.1",
-      "userAgent": "curl/7.88.1",
-      "timestamp": "2026-11-07T04:22:13.909Z"
-    },
-    {
-      "id": "log-1793915009428-o3mkv",
-      "userId": "user-superadmin",
-      "username": "superadmin",
-      "role": "SUPER_ADMIN",
-      "action": "LOGIN",
-      "details": "Login berhasil melalui Portal Terpadu",
-      "ipAddress": "127.0.0.1",
-      "userAgent": "curl/7.88.1",
-      "timestamp": "2026-11-05T21:43:29.428Z"
-    },
-    {
-      "id": "log-1793914682572-rfmux",
-      "userId": "user-superadmin",
-      "username": "superadmin",
-      "role": "SUPER_ADMIN",
-      "action": "DELETE_USER",
-      "details": "Menghapus akun pengguna @test.delete (Test Pengguna Hapus)",
-      "ipAddress": "127.0.0.1",
-      "userAgent": "curl/7.88.1",
-      "timestamp": "2026-11-05T21:38:02.572Z"
-    },
-    {
-      "id": "log-1793914682556-6ba38",
-      "userId": "user-superadmin",
-      "username": "superadmin",
-      "role": "SUPER_ADMIN",
-      "action": "CREATE_USER",
-      "details": "Menambahkan pengguna baru: Test Pengguna Hapus (@test.delete) dengan role USER",
-      "ipAddress": "127.0.0.1",
-      "userAgent": "curl/7.88.1",
-      "timestamp": "2026-11-05T21:38:02.556Z"
-    },
-    {
-      "id": "log-1793914676568-qlcgl",
-      "userId": "user-superadmin",
-      "username": "superadmin",
-      "role": "SUPER_ADMIN",
-      "action": "LOGIN",
-      "details": "Login sukses via Google Account: smknegeri1tegalsari@gmail.com",
-      "ipAddress": "127.0.0.1",
-      "userAgent": "curl/7.88.1",
-      "timestamp": "2026-11-05T21:37:56.569Z"
-    },
-    {
-      "id": "log-1793914673024-lfeaa",
-      "userId": "user-superadmin",
-      "username": "superadmin",
-      "role": "SUPER_ADMIN",
-      "action": "LOGIN",
-      "details": "Login berhasil melalui Portal Terpadu",
-      "ipAddress": "127.0.0.1",
-      "userAgent": "curl/7.88.1",
-      "timestamp": "2026-11-05T21:37:53.024Z"
-    },
-    {
-      "id": "log-1793914669190-09qsy",
-      "userId": "user-superadmin",
-      "username": "superadmin",
-      "role": "SUPER_ADMIN",
-      "action": "LOGIN",
-      "details": "Login berhasil melalui Portal Terpadu",
-      "ipAddress": "127.0.0.1",
-      "userAgent": "curl/7.88.1",
-      "timestamp": "2026-11-05T21:37:49.190Z"
-    },
-    {
-      "id": "log-1793913699960-dl99g",
-      "userId": "user-superadmin",
-      "username": "superadmin",
-      "role": "SUPER_ADMIN",
-      "action": "LOGIN",
-      "details": "Login berhasil melalui Portal Terpadu",
-      "ipAddress": "127.0.0.1",
-      "userAgent": "curl/7.88.1",
-      "timestamp": "2026-11-05T21:21:39.960Z"
-    },
-    {
-      "id": "log-1793913695299-avytj",
-      "userId": "user-superadmin",
-      "username": "superadmin",
-      "role": "SUPER_ADMIN",
-      "action": "DELETE_USER",
-      "details": "Menghapus akun pengguna @test.delete (Test Akun Hapus)",
-      "ipAddress": "127.0.0.1",
-      "userAgent": "curl/7.88.1",
-      "timestamp": "2026-11-05T21:21:35.299Z"
-    },
-    {
-      "id": "log-1793913695267-cme34",
-      "userId": "user-superadmin",
-      "username": "superadmin",
-      "role": "SUPER_ADMIN",
-      "action": "LOGIN",
-      "details": "Login berhasil melalui Portal Terpadu",
-      "ipAddress": "127.0.0.1",
-      "userAgent": "curl/7.88.1",
-      "timestamp": "2026-11-05T21:21:35.267Z"
-    },
-    {
-      "id": "log-1793913681875-bjoke",
-      "userId": "user-superadmin",
-      "username": "superadmin",
-      "role": "SUPER_ADMIN",
-      "action": "CREATE_USER",
-      "details": "Menambahkan pengguna baru: Test Akun Hapus (@test.delete) dengan role USER",
-      "ipAddress": "127.0.0.1",
-      "userAgent": "curl/7.88.1",
-      "timestamp": "2026-11-05T21:21:21.875Z"
-    },
-    {
-      "id": "log-1793913677902-ki274",
-      "userId": "user-superadmin",
-      "username": "superadmin",
-      "role": "SUPER_ADMIN",
-      "action": "LOGIN",
-      "details": "Login berhasil melalui Portal Terpadu",
-      "ipAddress": "127.0.0.1",
-      "userAgent": "curl/7.88.1",
-      "timestamp": "2026-11-05T21:21:17.902Z"
-    },
-    {
-      "id": "log-1793913447659-rk0ua",
-      "userId": "user-superadmin",
-      "username": "superadmin",
-      "role": "SUPER_ADMIN",
-      "action": "LOGIN",
-      "details": "Login berhasil melalui Portal Terpadu",
-      "ipAddress": "127.0.0.1",
-      "userAgent": "curl/7.88.1",
-      "timestamp": "2026-11-05T21:17:27.659Z"
-    },
-    {
-      "id": "log-1793840733971-yw8df",
-      "userId": "user-siswa",
-      "username": "siswa.budi",
-      "role": "USER",
-      "action": "OPEN_APP",
-      "details": "Akses Ditolak: Mencoba membuka SISARPRAS SMKN 1 Tegalsari tanpa izin hak akses.",
-      "targetAppId": "app-sisarpras",
-      "targetAppName": "SISARPRAS SMKN 1 Tegalsari",
-      "ipAddress": "127.0.0.1",
-      "userAgent": "curl/7.88.1",
-      "timestamp": "2026-11-05T01:05:33.971Z"
-    },
-    {
-      "id": "log-1793840723747-8oji4",
-      "userId": "user-siswa",
-      "username": "siswa.budi",
-      "role": "USER",
-      "action": "LOGIN",
-      "details": "Login berhasil melalui Portal Terpadu",
-      "ipAddress": "127.0.0.1",
-      "userAgent": "curl/7.88.1",
-      "timestamp": "2026-11-05T01:05:23.747Z"
-    },
-    {
-      "id": "log-1793840716273-1vsua",
-      "userId": "user-superadmin",
-      "username": "superadmin",
-      "role": "SUPER_ADMIN",
-      "action": "OPEN_APP",
-      "details": "Membuka aplikasi Aplikasi Ujian SEMAKASARI",
-      "targetAppId": "app-semakasari",
-      "targetAppName": "Aplikasi Ujian SEMAKASARI",
-      "ipAddress": "127.0.0.1",
-      "userAgent": "curl/7.88.1",
-      "timestamp": "2026-11-05T01:05:16.273Z"
-    },
-    {
-      "id": "log-1793840710939-eqbnz",
-      "userId": "user-superadmin",
-      "username": "superadmin",
-      "role": "SUPER_ADMIN",
-      "action": "LOGIN",
-      "details": "Login berhasil melalui Portal Terpadu",
-      "ipAddress": "127.0.0.1",
-      "userAgent": "curl/7.88.1",
-      "timestamp": "2026-11-05T01:05:10.939Z"
-    },
-    {
-      "id": "log-1793840699733-init",
+      "id": "log-1794027556362-init",
       "userId": "system",
       "username": "system",
       "role": "SUPER_ADMIN",
@@ -540,7 +280,7 @@
       "details": "Sistem Portal Terpadu SMKN 1 Tegalsari diinisialisasi.",
       "ipAddress": "127.0.0.1",
       "userAgent": "Server-Init",
-      "timestamp": "2026-11-05T01:04:59.733Z"
+      "timestamp": "2026-11-07T04:59:16.362Z"
     }
   ],
   "settings": {
@@ -548,8 +288,9 @@
     "schoolName": "SMK NEGERI 1 TEGALSARI",
     "portalTitle": "PORTAL TERPADU APLIKASI",
     "tagline": "Satu Gerbang Akses Seluruh Layanan & Sistem Informasi Sekolah",
-    "address": "Jl. KH. Syafa'at Blokagung, Karangdoro, Tegalsari, Banyuwangi",
-    "contactHelpdesk": "helpdesk@smkn1tegalsari.sch.id | +62 812-3456-7890",
+    "logoUrl": "/assets/aistudio/Logo_SMK_Negeri_1_Tegalsari_200x200_ce1ff52b.jpg",
+    "address": "Jl. KH. Abdul Majid No. 09, Tegalsari, Kec. Tegalsari, Kab. Banyuwangi, Jawa Timur 68491",
+    "contactHelpdesk": "helpdesk@smkn1tegalsari.sch.id | (0333) 2811000",
     "maintenanceMode": false,
     "allowSelfRegistration": false,
     "announcementText": "Selamat datang di Portal Terpadu SMKN 1 Tegalsari. Pastikan selalu logout setelah selesai menggunakan aplikasi.",

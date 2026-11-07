@@ -34,7 +34,15 @@ import { AuditLogs } from './components/admin/AuditLogs';
 import { PortalSettingsView } from './components/admin/PortalSettingsView';
 import { GuideView } from './components/GuideView';
 import { Application, Category, PortalSettings } from './types';
-import { INITIAL_APPLICATIONS, INITIAL_CATEGORIES, INITIAL_SETTINGS, SCHOOL_INFO } from './lib/schoolData';
+import { SCHOOL_INFO } from './lib/schoolData';
+import {
+  getLocalApplications,
+  saveLocalApplications,
+  getLocalCategories,
+  saveLocalCategories,
+  getLocalSettings,
+  saveLocalSettings,
+} from './lib/portalStorage';
 
 const FAVORITES_STORAGE_KEY = 'portal_smkn1_fav_apps';
 
@@ -48,10 +56,10 @@ function PortalAppContent() {
   const [showLoginView, setShowLoginView] = useState(false);
   const [pendingAppToOpen, setPendingAppToOpen] = useState<Application | null>(null);
 
-  // Applications & Categories state
-  const [applications, setApplications] = useState<Application[]>(INITIAL_APPLICATIONS);
-  const [categories, setCategories] = useState<Category[]>(INITIAL_CATEGORIES);
-  const [settings, setSettings] = useState<PortalSettings>(INITIAL_SETTINGS);
+  // Applications & Categories state initialized from local storage / seed
+  const [applications, setApplications] = useState<Application[]>(() => getLocalApplications());
+  const [categories, setCategories] = useState<Category[]>(() => getLocalCategories());
+  const [settings, setSettings] = useState<PortalSettings>(() => getLocalSettings());
 
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
@@ -101,30 +109,58 @@ function PortalAppContent() {
 
   // Fetch applications & categories from backend (public or authenticated)
   const loadPortalData = async () => {
+    // Immediately ensure local data is synced
+    setApplications(getLocalApplications());
+    setCategories(getLocalCategories());
+    setSettings(getLocalSettings());
+
     try {
       const headers: Record<string, string> = {};
-      if (token) headers['Authorization'] = `Bearer ${token}`;
+      if (token && !token.startsWith('local_session_')) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
 
       const [resApps, resCats, resSettings] = await Promise.all([
-        fetch(token ? '/api/applications?all=true' : '/api/applications', { headers }),
-        fetch('/api/categories'),
-        fetch('/api/settings'),
+        fetch(token ? '/api/applications?all=true' : '/api/applications', { headers }).catch(() => null),
+        fetch('/api/categories').catch(() => null),
+        fetch('/api/settings').catch(() => null),
       ]);
 
-      if (resApps.ok) {
-        const data = await resApps.json();
-        if (data.applications) setApplications(data.applications);
+      if (resApps && resApps.ok) {
+        const contentType = resApps.headers.get('content-type') || '';
+        if (contentType.includes('application/json')) {
+          const data = await resApps.json();
+          if (data.applications && Array.isArray(data.applications)) {
+            setApplications(data.applications);
+            saveLocalApplications(data.applications);
+          }
+        }
       }
-      if (resCats.ok) {
-        const data = await resCats.json();
-        if (data.categories) setCategories(data.categories);
+      if (resCats && resCats.ok) {
+        const contentType = resCats.headers.get('content-type') || '';
+        if (contentType.includes('application/json')) {
+          const data = await resCats.json();
+          if (data.categories && Array.isArray(data.categories)) {
+            setCategories(data.categories);
+            saveLocalCategories(data.categories);
+          }
+        }
       }
-      if (resSettings.ok) {
-        const data = await resSettings.json();
-        if (data.settings) setSettings(data.settings);
+      if (resSettings && resSettings.ok) {
+        const contentType = resSettings.headers.get('content-type') || '';
+        if (contentType.includes('application/json')) {
+          const data = await resSettings.json();
+          if (data.settings) {
+            setSettings(data.settings);
+            saveLocalSettings(data.settings);
+          }
+        }
       }
     } catch (err) {
       console.warn('Could not load dynamic portal data, using local fallback:', err);
+      setApplications(getLocalApplications());
+      setCategories(getLocalCategories());
+      setSettings(getLocalSettings());
     }
   };
 

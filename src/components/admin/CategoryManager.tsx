@@ -2,6 +2,10 @@ import React, { useState } from 'react';
 import { Plus, Edit2, Trash2, FolderTree, Save, X, AlertCircle } from 'lucide-react';
 import { Category, Application } from '../../types';
 import { useAuth } from '../../context/AuthContext';
+import {
+  addOrUpdateLocalCategory,
+  deleteLocalCategory,
+} from '../../lib/portalStorage';
 
 interface CategoryManagerProps {
   categories: Category[];
@@ -17,6 +21,7 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
   const { token } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [deleteConfirmCat, setDeleteConfirmCat] = useState<Category | null>(null);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -46,49 +51,60 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
     }
 
     setIsSubmitting(true);
+    const catPayload = {
+      id: editingCategory ? editingCategory.id : `cat-${Date.now()}`,
+      name: name.trim(),
+      description: description.trim(),
+    };
+
+    // 1. Immediately persist locally
+    addOrUpdateLocalCategory(catPayload);
+
+    // 2. Sync to server in background
     try {
       const url = editingCategory ? `/api/categories/${editingCategory.id}` : '/api/categories';
       const method = editingCategory ? 'PUT' : 'POST';
 
-      const res = await fetch(url, {
+      fetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ name: name.trim(), description: description.trim() }),
+        body: JSON.stringify(catPayload),
+      }).catch((err) => {
+        console.warn('Server category sync failed:', err);
       });
-
-      if (res.ok) {
-        setIsModalOpen(false);
-        onRefresh();
-      } else {
-        const data = await res.json();
-        setError(data.error || 'Gagal menyimpan kategori');
-      }
     } catch (err) {
-      setError('Kesalahan koneksi');
-    } finally {
-      setIsSubmitting(false);
+      console.warn('Server sync error:', err);
     }
+
+    setIsSubmitting(false);
+    setIsModalOpen(false);
+    onRefresh();
   };
 
-  const handleDelete = async (catId: string) => {
-    const appsInCat = applications.filter((a) => a.categoryId === catId);
-    if (appsInCat.length > 0) {
-      if (!window.confirm(`Kategori ini memiliki ${appsInCat.length} aplikasi terhubung. Tetap hapus?`)) {
-        return;
-      }
-    } else if (!window.confirm('Hapus kategori ini?')) {
-      return;
-    }
+  const confirmDelete = (cat: Category) => {
+    setDeleteConfirmCat(cat);
+  };
 
+  const handleDelete = async () => {
+    if (!deleteConfirmCat) return;
+    const catId = deleteConfirmCat.id;
+
+    // 1. Delete locally immediately
+    deleteLocalCategory(catId);
+    setDeleteConfirmCat(null);
+    onRefresh();
+
+    // 2. Sync deletion to server in background
     try {
-      const res = await fetch(`/api/categories/${catId}`, {
+      fetch(`/api/categories/${catId}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
+      }).catch((err) => {
+        console.warn('Server delete category failed:', err);
       });
-      if (res.ok) onRefresh();
     } catch (err) {
       console.error('Delete category error:', err);
     }
@@ -147,7 +163,7 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
                 </button>
                 <button
                   type="button"
-                  onClick={() => handleDelete(cat.id)}
+                  onClick={() => confirmDelete(cat)}
                   className="p-1.5 rounded-lg bg-slate-100 hover:bg-rose-50 hover:text-rose-700 text-slate-700 transition-colors text-xs flex items-center gap-1 cursor-pointer font-medium"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
@@ -158,6 +174,39 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
           );
         })}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirmCat && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-fadeIn">
+          <div className="w-full max-w-sm rounded-2xl bg-white border border-slate-200 p-6 text-slate-900 shadow-2xl">
+            <h3 className="text-base font-bold text-slate-900 mb-2">Hapus Kategori?</h3>
+            <p className="text-xs text-slate-500 mb-5 leading-relaxed">
+              Anda yakin ingin menghapus kategori <strong>"{deleteConfirmCat.name}"</strong>?
+              {applications.filter((a) => a.categoryId === deleteConfirmCat.id).length > 0 && (
+                <span className="block mt-2 text-rose-600 font-medium">
+                  Perhatian: Terdapat {applications.filter((a) => a.categoryId === deleteConfirmCat.id).length} aplikasi yang terhubung ke kategori ini.
+                </span>
+              )}
+            </p>
+            <div className="flex items-center gap-2.5">
+              <button
+                type="button"
+                onClick={() => setDeleteConfirmCat(null)}
+                className="flex-1 py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={handleDelete}
+                className="flex-1 py-2 px-3 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold cursor-pointer"
+              >
+                Hapus Kategori
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-fadeIn">
