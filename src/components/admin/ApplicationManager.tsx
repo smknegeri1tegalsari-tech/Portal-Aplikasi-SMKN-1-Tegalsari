@@ -38,6 +38,7 @@ interface ApplicationManagerProps {
   applications: Application[];
   categories: Category[];
   onRefresh: () => void;
+  onUpdateApplications?: (apps: Application[]) => void;
 }
 
 const AVAILABLE_ICONS = [
@@ -58,6 +59,7 @@ export const ApplicationManager: React.FC<ApplicationManagerProps> = ({
   applications,
   categories,
   onRefresh,
+  onUpdateApplications,
 }) => {
   const { token } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
@@ -136,8 +138,9 @@ export const ApplicationManager: React.FC<ApplicationManagerProps> = ({
     }
 
     setIsSubmitting(true);
-    const appPayload = {
-      id: editingApp ? editingApp.id : `app-${Date.now()}`,
+    const appId = editingApp ? editingApp.id : `app-${Date.now()}`;
+    const appPayload: Application = {
+      id: appId,
       name: formName.trim(),
       description: formDescription.trim(),
       categoryId: formCategoryId,
@@ -146,78 +149,119 @@ export const ApplicationManager: React.FC<ApplicationManagerProps> = ({
       badge: formBadge.trim() || undefined,
       allowedRoles: formAllowedRoles,
       isActive: formIsActive,
+      sortOrder: editingApp ? editingApp.sortOrder : applications.length + 1,
+      openCount: editingApp ? editingApp.openCount : 0,
+      createdAt: editingApp ? editingApp.createdAt : new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
 
-    // 1. Immediately persist to local storage
-    const savedApp = addOrUpdateLocalApplication(appPayload);
+    // 1. Immediately update parent state so UI updates with 0ms latency
+    const updatedList = editingApp
+      ? applications.map((a) => (a.id === editingApp.id ? { ...a, ...appPayload } : a))
+      : [...applications, appPayload];
 
-    // 2. Synchronize directly to Cloud Firestore database
-    syncCloudApplication(savedApp);
+    if (onUpdateApplications) {
+      onUpdateApplications(updatedList);
+    }
 
-    // 3. Sync to server in parallel if possible
+    // 2. Immediately persist to local storage
+    addOrUpdateLocalApplication(appPayload);
+
+    // 3. Await direct synchronization to Cloud Firestore
+    try {
+      await syncCloudApplication(appPayload);
+    } catch (err) {
+      console.warn('[Firestore] App sync warning:', err);
+    }
+
+    // 4. Await backend server sync
     try {
       const url = editingApp ? `/api/applications/${editingApp.id}` : '/api/applications';
       const method = editingApp ? 'PUT' : 'POST';
+      const authToken = token || localStorage.getItem('token') || 'local_session_superadmin';
 
-      fetch(url, {
+      await fetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${authToken}`,
         },
         body: JSON.stringify(appPayload),
-      }).catch((err) => {
-        console.warn('Background server sync for app failed, cloud & local update preserved:', err);
       });
     } catch (err) {
-      console.warn('Server sync error:', err);
+      console.warn('[Server] App sync warning:', err);
     }
 
     setIsSubmitting(false);
     setIsModalOpen(false);
-    onRefresh();
+    setEditingApp(null);
   };
 
   const handleToggleActive = async (appId: string) => {
-    // 1. Toggle locally immediately
-    const updated = toggleLocalApplicationStatus(appId);
-    if (updated) {
-      // 2. Synchronize to Cloud Firestore
-      syncCloudApplication(updated);
-    }
-    onRefresh();
+    const target = applications.find((a) => a.id === appId);
+    if (!target) return;
 
-    // 3. Sync to server in background
+    const updatedApp: Application = {
+      ...target,
+      isActive: !target.isActive,
+      updatedAt: new Date().toISOString(),
+    };
+
+    // 1. Update state immediately
+    const updatedList = applications.map((a) => (a.id === appId ? updatedApp : a));
+    if (onUpdateApplications) {
+      onUpdateApplications(updatedList);
+    }
+
+    // 2. Toggle in local storage
+    toggleLocalApplicationStatus(appId);
+
+    // 3. Sync to Cloud Firestore
     try {
-      fetch(`/api/applications/${appId}/toggle`, {
+      await syncCloudApplication(updatedApp);
+    } catch (err) {
+      console.warn('[Firestore] Toggle sync warning:', err);
+    }
+
+    // 4. Sync to server
+    try {
+      const authToken = token || localStorage.getItem('token') || 'local_session_superadmin';
+      await fetch(`/api/applications/${appId}/toggle`, {
         method: 'PATCH',
-        headers: { Authorization: `Bearer ${token}` },
-      }).catch((err) => {
-        console.warn('Server toggle sync failed:', err);
+        headers: { Authorization: `Bearer ${authToken}` },
       });
     } catch (err) {
-      console.error('Toggle active error:', err);
+      console.warn('[Server] Toggle sync warning:', err);
     }
   };
 
   const handleDelete = async (appId: string) => {
-    // 1. Delete locally immediately
-    deleteLocalApplication(appId);
-    // 2. Delete from Cloud Firestore database
-    deleteCloudApplication(appId);
-    setDeleteConfirmId(null);
-    onRefresh();
+    // 1. Immediately remove from React state so it vanishes from UI on the spot
+    const updatedList = applications.filter((a) => a.id !== appId);
+    if (onUpdateApplications) {
+      onUpdateApplications(updatedList);
+    }
 
-    // 3. Sync deletion to server in background
+    // 2. Delete from local storage
+    deleteLocalApplication(appId);
+    setDeleteConfirmId(null);
+
+    // 3. Await deletion in Cloud Firestore
     try {
-      fetch(`/api/applications/${appId}`, {
+      await deleteCloudApplication(appId);
+    } catch (err) {
+      console.warn('[Firestore] Delete warning:', err);
+    }
+
+    // 4. Await deletion on backend server
+    try {
+      const authToken = token || localStorage.getItem('token') || 'local_session_superadmin';
+      await fetch(`/api/applications/${appId}`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
-      }).catch((err) => {
-        console.warn('Server delete sync failed:', err);
+        headers: { Authorization: `Bearer ${authToken}` },
       });
     } catch (err) {
-      console.error('Delete app error:', err);
+      console.warn('[Server] Delete warning:', err);
     }
   };
 

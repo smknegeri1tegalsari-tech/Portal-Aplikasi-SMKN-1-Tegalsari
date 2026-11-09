@@ -15,12 +15,14 @@ interface CategoryManagerProps {
   categories: Category[];
   applications: Application[];
   onRefresh: () => void;
+  onUpdateCategories?: (cats: Category[]) => void;
 }
 
 export const CategoryManager: React.FC<CategoryManagerProps> = ({
   categories,
   applications,
   onRefresh,
+  onUpdateCategories,
 }) => {
   const { token } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -55,32 +57,47 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
     }
 
     setIsSubmitting(true);
-    const catPayload = {
-      id: editingCategory ? editingCategory.id : `cat-${Date.now()}`,
+    const catId = editingCategory ? editingCategory.id : `cat-${Date.now()}`;
+    const catPayload: Category = {
+      id: catId,
       name: name.trim(),
       description: description.trim(),
+      sortOrder: editingCategory ? editingCategory.sortOrder : categories.length + 1,
+      createdAt: editingCategory ? editingCategory.createdAt : new Date().toISOString(),
     };
 
-    // 1. Immediately persist locally
-    const savedCat = addOrUpdateLocalCategory(catPayload);
+    // 1. Immediately update parent state for 0ms UI response
+    const updatedList = editingCategory
+      ? categories.map((c) => (c.id === editingCategory.id ? catPayload : c))
+      : [...categories, catPayload];
 
-    // 2. Synchronize directly to Cloud Firestore
-    syncCloudCategory(savedCat);
+    if (onUpdateCategories) {
+      onUpdateCategories(updatedList);
+    }
 
-    // 3. Sync to server in background
+    // 2. Immediately persist locally
+    addOrUpdateLocalCategory(catPayload);
+
+    // 3. Await synchronize directly to Cloud Firestore
+    try {
+      await syncCloudCategory(catPayload);
+    } catch (err) {
+      console.warn('[Firestore] Category sync warning:', err);
+    }
+
+    // 4. Await sync to server
     try {
       const url = editingCategory ? `/api/categories/${editingCategory.id}` : '/api/categories';
       const method = editingCategory ? 'PUT' : 'POST';
+      const authToken = token || localStorage.getItem('token') || 'local_session_superadmin';
 
-      fetch(url, {
+      await fetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${authToken}`,
         },
         body: JSON.stringify(catPayload),
-      }).catch((err) => {
-        console.warn('Server category sync failed:', err);
       });
     } catch (err) {
       console.warn('Server sync error:', err);
@@ -88,7 +105,7 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
 
     setIsSubmitting(false);
     setIsModalOpen(false);
-    onRefresh();
+    setEditingCategory(null);
   };
 
   const confirmDelete = (cat: Category) => {
@@ -99,20 +116,29 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
     if (!deleteConfirmCat) return;
     const catId = deleteConfirmCat.id;
 
-    // 1. Delete locally immediately
-    deleteLocalCategory(catId);
-    // 2. Delete from Cloud Firestore
-    deleteCloudCategory(catId);
-    setDeleteConfirmCat(null);
-    onRefresh();
+    // 1. Immediately remove from state
+    const updatedList = categories.filter((c) => c.id !== catId);
+    if (onUpdateCategories) {
+      onUpdateCategories(updatedList);
+    }
 
-    // 3. Sync deletion to server in background
+    // 2. Delete locally immediately
+    deleteLocalCategory(catId);
+    setDeleteConfirmCat(null);
+
+    // 3. Await delete from Cloud Firestore
     try {
-      fetch(`/api/categories/${catId}`, {
+      await deleteCloudCategory(catId);
+    } catch (err) {
+      console.warn('[Firestore] Category delete warning:', err);
+    }
+
+    // 4. Await deletion on server
+    try {
+      const authToken = token || localStorage.getItem('token') || 'local_session_superadmin';
+      await fetch(`/api/categories/${catId}`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
-      }).catch((err) => {
-        console.warn('Server delete category failed:', err);
+        headers: { Authorization: `Bearer ${authToken}` },
       });
     } catch (err) {
       console.error('Delete category error:', err);

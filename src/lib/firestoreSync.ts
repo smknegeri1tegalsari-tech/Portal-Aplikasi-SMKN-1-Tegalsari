@@ -71,15 +71,13 @@ export function subscribeCloudApplications(
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
-        if (!snapshot.empty) {
-          const apps: Application[] = [];
-          snapshot.forEach((d) => {
-            apps.push({ id: d.id, ...(d.data() as any) });
-          });
-          apps.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
-          saveLocalApplications(apps);
-          onUpdate(apps);
-        }
+        const apps: Application[] = [];
+        snapshot.forEach((d) => {
+          apps.push({ id: d.id, ...(d.data() as any) });
+        });
+        apps.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+        saveLocalApplications(apps);
+        onUpdate(apps);
       },
       (error) => {
         console.warn('[Firestore] Realtime applications listener error:', error);
@@ -136,15 +134,13 @@ export function subscribeCloudCategories(
     return onSnapshot(
       q,
       (snapshot) => {
-        if (!snapshot.empty) {
-          const cats: Category[] = [];
-          snapshot.forEach((d) => {
-            cats.push({ id: d.id, ...(d.data() as any) });
-          });
-          cats.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
-          saveLocalCategories(cats);
-          onUpdate(cats);
-        }
+        const cats: Category[] = [];
+        snapshot.forEach((d) => {
+          cats.push({ id: d.id, ...(d.data() as any) });
+        });
+        cats.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+        saveLocalCategories(cats);
+        onUpdate(cats);
       },
       (error) => {
         console.warn('[Firestore] Realtime categories listener error:', error);

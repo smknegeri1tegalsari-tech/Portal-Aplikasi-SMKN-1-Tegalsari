@@ -37,14 +37,14 @@ export function getLocalApplications(): Application[] {
   if (stored) {
     try {
       const parsed = JSON.parse(stored);
-      if (Array.isArray(parsed) && parsed.length > 0) {
+      if (Array.isArray(parsed)) {
         return parsed;
       }
     } catch (e) {
       console.error('[portalStorage] Error parsing applications:', e);
     }
   }
-  // Initialize with INITIAL_APPLICATIONS
+  // Initialize with INITIAL_APPLICATIONS only on very first clean install
   saveLocalApplications(INITIAL_APPLICATIONS);
   return INITIAL_APPLICATIONS;
 }
@@ -128,7 +128,7 @@ export function getLocalCategories(): Category[] {
   if (stored) {
     try {
       const parsed = JSON.parse(stored);
-      if (Array.isArray(parsed) && parsed.length > 0) {
+      if (Array.isArray(parsed)) {
         return parsed;
       }
     } catch (e) {

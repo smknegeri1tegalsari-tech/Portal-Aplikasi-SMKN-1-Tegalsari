@@ -272,6 +272,45 @@
   ],
   "accessLogs": [
     {
+      "id": "log-1794188648128-fbbp8",
+      "userId": "user-superadmin",
+      "username": "superadmin",
+      "role": "SUPER_ADMIN",
+      "action": "DELETE_APP",
+      "details": "Menghapus aplikasi: Aplikasi Uji Coba (Teredit)",
+      "targetAppId": "app-1794188636970",
+      "targetAppName": "Aplikasi Uji Coba (Teredit)",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "curl/7.88.1",
+      "timestamp": "2026-11-09T01:44:08.128Z"
+    },
+    {
+      "id": "log-1794188643042-y6wed",
+      "userId": "user-superadmin",
+      "username": "superadmin",
+      "role": "SUPER_ADMIN",
+      "action": "UPDATE_APP",
+      "details": "Memperbarui data aplikasi: Aplikasi Uji Coba (Teredit)",
+      "targetAppId": "app-1794188636970",
+      "targetAppName": "Aplikasi Uji Coba (Teredit)",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "curl/7.88.1",
+      "timestamp": "2026-11-09T01:44:03.042Z"
+    },
+    {
+      "id": "log-1794188636971-5fmd9",
+      "userId": "user-superadmin",
+      "username": "superadmin",
+      "role": "SUPER_ADMIN",
+      "action": "CREATE_APP",
+      "details": "Menambahkan aplikasi baru: Aplikasi Uji Coba",
+      "targetAppId": "app-1794188636970",
+      "targetAppName": "Aplikasi Uji Coba",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "curl/7.88.1",
+      "timestamp": "2026-11-09T01:43:56.971Z"
+    },
+    {
       "id": "log-1794027556362-init",
       "userId": "system",
       "username": "system",

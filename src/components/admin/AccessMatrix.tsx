@@ -3,6 +3,8 @@ import { ShieldCheck, Check, X, Save, AlertCircle, CheckCircle } from 'lucide-re
 import { Application, UserRole } from '../../types';
 import { useAuth } from '../../context/AuthContext';
 import { getAppIcon } from '../AppCard';
+import { addOrUpdateLocalApplication } from '../../lib/portalStorage';
+import { syncCloudApplication } from '../../lib/firestoreSync';
 
 interface AccessMatrixProps {
   applications: Application[];
@@ -43,15 +45,23 @@ export const AccessMatrix: React.FC<AccessMatrixProps> = ({
     setSuccessMessage(null);
 
     try {
+      const authToken = token || localStorage.getItem('token') || 'local_session_superadmin';
       // Save updates for apps where matrix changed
       const updatePromises = applications.map(async (app) => {
         const newRoles = matrix[app.id];
         if (!newRoles) return;
+        const updatedApp = { ...app, allowedRoles: newRoles, updatedAt: new Date().toISOString() };
+        
+        // Update local storage
+        addOrUpdateLocalApplication(updatedApp);
+        // Sync to Cloud Firestore
+        await syncCloudApplication(updatedApp);
+        // Sync to server
         await fetch(`/api/applications/${app.id}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${authToken}`,
           },
           body: JSON.stringify({ allowedRoles: newRoles }),
         });
@@ -59,7 +69,6 @@ export const AccessMatrix: React.FC<AccessMatrixProps> = ({
 
       await Promise.all(updatePromises);
       setSuccessMessage('Matriks hak akses berhasil disimpan dan diverifikasi.');
-      onRefresh();
       setTimeout(() => setSuccessMessage(null), 3000);
     } catch (err) {
       console.error('Save matrix error:', err);

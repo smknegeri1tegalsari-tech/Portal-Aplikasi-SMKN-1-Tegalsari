@@ -273,19 +273,21 @@ export const UserManager: React.FC<UserManagerProps> = ({ applications }) => {
         }).catch(() => {});
       }
 
-      deleteClientUser(deleteConfirmUser.id);
-      deleteCloudUser(deleteConfirmUser.id);
+      const deletedId = deleteConfirmUser.id;
+      setUsers((prev) => prev.filter((u) => u.id !== deletedId));
+      deleteClientUser(deletedId);
+      await deleteCloudUser(deletedId);
       setFeedbackMessage({ type: 'success', text: `Akun @${deleteConfirmUser.username} (${deleteConfirmUser.fullName}) berhasil dihapus.` });
       setDeleteConfirmUser(null);
-      fetchUsers();
       setTimeout(() => setFeedbackMessage(null), 4000);
     } catch (err) {
       console.error('Delete user error:', err);
-      deleteClientUser(deleteConfirmUser.id);
-      deleteCloudUser(deleteConfirmUser.id);
+      const deletedId = deleteConfirmUser.id;
+      setUsers((prev) => prev.filter((u) => u.id !== deletedId));
+      deleteClientUser(deletedId);
+      await deleteCloudUser(deletedId);
       setFeedbackMessage({ type: 'success', text: `Akun @${deleteConfirmUser.username} berhasil dihapus.` });
       setDeleteConfirmUser(null);
-      fetchUsers();
       setTimeout(() => setFeedbackMessage(null), 4000);
     } finally {
       setIsSubmitting(false);

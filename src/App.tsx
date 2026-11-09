@@ -114,60 +114,82 @@ function PortalAppContent() {
   const [selectedAppToOpen, setSelectedAppToOpen] = useState<Application | null>(null);
   const [isLaunchModalOpen, setIsLaunchModalOpen] = useState(false);
 
-  // Fetch applications & categories from backend (public or authenticated)
+  // Fetch applications & categories (prioritizing live Cloud Firestore so published database is never overwritten)
   const loadPortalData = async () => {
-    // Immediately ensure local data is synced
+    // 1. Immediately display cached local data for fast render
     setApplications(getLocalApplications());
     setCategories(getLocalCategories());
     setSettings(getLocalSettings());
 
     try {
-      const headers: Record<string, string> = {};
-      if (token && !token.startsWith('local_session_')) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-
-      const [resApps, resCats, resSettings] = await Promise.all([
-        fetch(token ? '/api/applications?all=true' : '/api/applications', { headers }).catch(() => null),
-        fetch('/api/categories').catch(() => null),
-        fetch('/api/settings').catch(() => null),
+      // 2. Fetch from Cloud Firestore (primary cloud database)
+      const [cloudApps, cloudCats, cloudSettings] = await Promise.all([
+        fetchCloudApplications().catch(() => null),
+        fetchCloudCategories().catch(() => null),
+        fetchCloudSettings().catch(() => null),
       ]);
 
-      if (resApps && resApps.ok) {
-        const contentType = resApps.headers.get('content-type') || '';
-        if (contentType.includes('application/json')) {
-          const data = await resApps.json();
-          if (data.applications && Array.isArray(data.applications)) {
-            setApplications(data.applications);
-            saveLocalApplications(data.applications);
+      let cloudAppsFound = false;
+      if (cloudApps && cloudApps.length > 0) {
+        setApplications(cloudApps);
+        saveLocalApplications(cloudApps);
+        cloudAppsFound = true;
+      }
+      if (cloudCats && cloudCats.length > 0) {
+        setCategories(cloudCats);
+        saveLocalCategories(cloudCats);
+      }
+      if (cloudSettings) {
+        setSettings(cloudSettings);
+        saveLocalSettings(cloudSettings);
+      }
+
+      // 3. Only query server if cloud data was not retrieved (offline fallback)
+      if (!cloudAppsFound) {
+        const headers: Record<string, string> = {};
+        if (token && !token.startsWith('local_session_')) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        const [resApps, resCats, resSettings] = await Promise.all([
+          fetch(token ? '/api/applications?all=true' : '/api/applications', { headers }).catch(() => null),
+          fetch('/api/categories').catch(() => null),
+          fetch('/api/settings').catch(() => null),
+        ]);
+
+        if (resApps && resApps.ok) {
+          const contentType = resApps.headers.get('content-type') || '';
+          if (contentType.includes('application/json')) {
+            const data = await resApps.json();
+            if (data.applications && Array.isArray(data.applications) && data.applications.length > 0) {
+              setApplications(data.applications);
+              saveLocalApplications(data.applications);
+            }
           }
         }
-      }
-      if (resCats && resCats.ok) {
-        const contentType = resCats.headers.get('content-type') || '';
-        if (contentType.includes('application/json')) {
-          const data = await resCats.json();
-          if (data.categories && Array.isArray(data.categories)) {
-            setCategories(data.categories);
-            saveLocalCategories(data.categories);
+        if (resCats && resCats.ok) {
+          const contentType = resCats.headers.get('content-type') || '';
+          if (contentType.includes('application/json')) {
+            const data = await resCats.json();
+            if (data.categories && Array.isArray(data.categories) && data.categories.length > 0) {
+              setCategories(data.categories);
+              saveLocalCategories(data.categories);
+            }
           }
         }
-      }
-      if (resSettings && resSettings.ok) {
-        const contentType = resSettings.headers.get('content-type') || '';
-        if (contentType.includes('application/json')) {
-          const data = await resSettings.json();
-          if (data.settings) {
-            setSettings(data.settings);
-            saveLocalSettings(data.settings);
+        if (resSettings && resSettings.ok) {
+          const contentType = resSettings.headers.get('content-type') || '';
+          if (contentType.includes('application/json')) {
+            const data = await resSettings.json();
+            if (data.settings) {
+              setSettings(data.settings);
+              saveLocalSettings(data.settings);
+            }
           }
         }
       }
     } catch (err) {
       console.warn('Could not load dynamic portal data, using local fallback:', err);
-      setApplications(getLocalApplications());
-      setCategories(getLocalCategories());
-      setSettings(getLocalSettings());
     }
   };
 
@@ -768,6 +790,10 @@ function PortalAppContent() {
                   applications={applications}
                   categories={categories}
                   onRefresh={loadPortalData}
+                  onUpdateApplications={(updated) => {
+                    setApplications(updated);
+                    saveLocalApplications(updated);
+                  }}
                 />
               )}
 
@@ -780,6 +806,10 @@ function PortalAppContent() {
                   categories={categories}
                   applications={applications}
                   onRefresh={loadPortalData}
+                  onUpdateCategories={(updated) => {
+                    setCategories(updated);
+                    saveLocalCategories(updated);
+                  }}
                 />
               )}
 
