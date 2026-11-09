@@ -6,6 +6,10 @@ import {
   addOrUpdateLocalCategory,
   deleteLocalCategory,
 } from '../../lib/portalStorage';
+import {
+  syncCloudCategory,
+  deleteCloudCategory,
+} from '../../lib/firestoreSync';
 
 interface CategoryManagerProps {
   categories: Category[];
@@ -58,9 +62,12 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
     };
 
     // 1. Immediately persist locally
-    addOrUpdateLocalCategory(catPayload);
+    const savedCat = addOrUpdateLocalCategory(catPayload);
 
-    // 2. Sync to server in background
+    // 2. Synchronize directly to Cloud Firestore
+    syncCloudCategory(savedCat);
+
+    // 3. Sync to server in background
     try {
       const url = editingCategory ? `/api/categories/${editingCategory.id}` : '/api/categories';
       const method = editingCategory ? 'PUT' : 'POST';
@@ -94,10 +101,12 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
 
     // 1. Delete locally immediately
     deleteLocalCategory(catId);
+    // 2. Delete from Cloud Firestore
+    deleteCloudCategory(catId);
     setDeleteConfirmCat(null);
     onRefresh();
 
-    // 2. Sync deletion to server in background
+    // 3. Sync deletion to server in background
     try {
       fetch(`/api/categories/${catId}`, {
         method: 'DELETE',

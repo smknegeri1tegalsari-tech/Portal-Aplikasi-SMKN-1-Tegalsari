@@ -43,6 +43,13 @@ import {
   getLocalSettings,
   saveLocalSettings,
 } from './lib/portalStorage';
+import {
+  fetchCloudApplications,
+  fetchCloudCategories,
+  fetchCloudSettings,
+  subscribeCloudApplications,
+  subscribeCloudCategories,
+} from './lib/firestoreSync';
 
 const FAVORITES_STORAGE_KEY = 'portal_smkn1_fav_apps';
 
@@ -166,6 +173,35 @@ function PortalAppContent() {
 
   useEffect(() => {
     loadPortalData();
+
+    // 1. Fetch initial cloud data from Firestore
+    fetchCloudApplications().then((cloudApps) => {
+      if (cloudApps && cloudApps.length > 0) setApplications(cloudApps);
+    });
+    fetchCloudCategories().then((cloudCats) => {
+      if (cloudCats && cloudCats.length > 0) setCategories(cloudCats);
+    });
+    fetchCloudSettings().then((cloudSettings) => {
+      if (cloudSettings) setSettings(cloudSettings);
+    });
+
+    // 2. Real-time multi-device cloud synchronization listeners
+    const unsubApps = subscribeCloudApplications((cloudApps) => {
+      if (cloudApps && cloudApps.length > 0) {
+        setApplications(cloudApps);
+      }
+    });
+
+    const unsubCats = subscribeCloudCategories((cloudCats) => {
+      if (cloudCats && cloudCats.length > 0) {
+        setCategories(cloudCats);
+      }
+    });
+
+    return () => {
+      unsubApps();
+      unsubCats();
+    };
   }, [token]);
 
   // When user successfully logs in, if they clicked an app previously, auto-launch it!

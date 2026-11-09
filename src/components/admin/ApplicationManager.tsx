@@ -29,6 +29,10 @@ import {
   deleteLocalApplication,
   toggleLocalApplicationStatus,
 } from '../../lib/portalStorage';
+import {
+  syncCloudApplication,
+  deleteCloudApplication,
+} from '../../lib/firestoreSync';
 
 interface ApplicationManagerProps {
   applications: Application[];
@@ -145,9 +149,12 @@ export const ApplicationManager: React.FC<ApplicationManagerProps> = ({
     };
 
     // 1. Immediately persist to local storage
-    addOrUpdateLocalApplication(appPayload);
+    const savedApp = addOrUpdateLocalApplication(appPayload);
 
-    // 2. Sync to server in parallel if possible
+    // 2. Synchronize directly to Cloud Firestore database
+    syncCloudApplication(savedApp);
+
+    // 3. Sync to server in parallel if possible
     try {
       const url = editingApp ? `/api/applications/${editingApp.id}` : '/api/applications';
       const method = editingApp ? 'PUT' : 'POST';
@@ -160,7 +167,7 @@ export const ApplicationManager: React.FC<ApplicationManagerProps> = ({
         },
         body: JSON.stringify(appPayload),
       }).catch((err) => {
-        console.warn('Background server sync for app failed, local update preserved:', err);
+        console.warn('Background server sync for app failed, cloud & local update preserved:', err);
       });
     } catch (err) {
       console.warn('Server sync error:', err);
@@ -173,10 +180,14 @@ export const ApplicationManager: React.FC<ApplicationManagerProps> = ({
 
   const handleToggleActive = async (appId: string) => {
     // 1. Toggle locally immediately
-    toggleLocalApplicationStatus(appId);
+    const updated = toggleLocalApplicationStatus(appId);
+    if (updated) {
+      // 2. Synchronize to Cloud Firestore
+      syncCloudApplication(updated);
+    }
     onRefresh();
 
-    // 2. Sync to server in background
+    // 3. Sync to server in background
     try {
       fetch(`/api/applications/${appId}/toggle`, {
         method: 'PATCH',
@@ -192,10 +203,12 @@ export const ApplicationManager: React.FC<ApplicationManagerProps> = ({
   const handleDelete = async (appId: string) => {
     // 1. Delete locally immediately
     deleteLocalApplication(appId);
+    // 2. Delete from Cloud Firestore database
+    deleteCloudApplication(appId);
     setDeleteConfirmId(null);
     onRefresh();
 
-    // 2. Sync deletion to server in background
+    // 3. Sync deletion to server in background
     try {
       fetch(`/api/applications/${appId}`, {
         method: 'DELETE',

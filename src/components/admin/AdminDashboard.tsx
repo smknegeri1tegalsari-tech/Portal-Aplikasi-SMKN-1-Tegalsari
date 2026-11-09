@@ -62,8 +62,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     fetchStats();
   }, [token]);
 
+  const [showResetModal, setShowResetModal] = useState<boolean>(false);
+
   const handleResetDemoData = async () => {
-    if (!window.confirm('Pulihkan seluruh data contoh aplikasi, kategori, dan pengguna awal SMKN 1 Tegalsari?')) return;
+    setShowResetModal(false);
     try {
       const res = await fetch('/api/seed/reset', {
         method: 'POST',
@@ -333,11 +335,39 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           </div>
           <button
             type="button"
-            onClick={handleResetDemoData}
+            onClick={() => setShowResetModal(true)}
             className="py-2 px-3.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 text-xs font-semibold transition-colors shrink-0 cursor-pointer"
           >
             Reset Data Contoh Awal
           </button>
+        </div>
+      )}
+
+      {/* Reset Confirmation Modal */}
+      {showResetModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-fadeIn">
+          <div className="w-full max-w-sm rounded-2xl bg-white border border-slate-200 p-6 text-slate-900 shadow-2xl">
+            <h3 className="text-base font-bold text-slate-900 mb-2">Reset Data Contoh Awal?</h3>
+            <p className="text-xs text-slate-500 mb-5 leading-relaxed">
+              Tindakan ini akan mengembalikan seluruh 10 aplikasi default, kategori, dan akun demo SMKN 1 Tegalsari ke kondisi awal.
+            </p>
+            <div className="flex items-center gap-2.5">
+              <button
+                type="button"
+                onClick={() => setShowResetModal(false)}
+                className="flex-1 py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={handleResetDemoData}
+                className="flex-1 py-2 px-3 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold cursor-pointer"
+              >
+                Ya, Pulihkan Data
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

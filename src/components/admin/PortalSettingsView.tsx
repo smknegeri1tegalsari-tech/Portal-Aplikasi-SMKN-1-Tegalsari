@@ -3,6 +3,7 @@ import { Settings, Save, AlertCircle, CheckCircle, ShieldAlert, School } from 'l
 import { PortalSettings } from '../../types';
 import { useAuth } from '../../context/AuthContext';
 import { getLocalSettings, saveLocalSettings } from '../../lib/portalStorage';
+import { syncCloudSettings } from '../../lib/firestoreSync';
 
 export const PortalSettingsView: React.FC = () => {
   const { token, isSuperAdmin } = useAuth();
@@ -66,7 +67,10 @@ export const PortalSettingsView: React.FC = () => {
     saveLocalSettings(updatedSettings);
     setSettings(updatedSettings);
 
-    // 2. Sync to server in background
+    // 2. Synchronize to Cloud Firestore
+    syncCloudSettings(updatedSettings);
+
+    // 3. Sync to server in background
     try {
       fetch('/api/settings', {
         method: 'PUT',

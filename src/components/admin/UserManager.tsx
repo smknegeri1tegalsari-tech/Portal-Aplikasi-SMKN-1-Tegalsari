@@ -26,6 +26,11 @@ import {
   toggleClientUserStatus,
   resetClientUserPassword,
 } from '../../lib/clientAuth';
+import {
+  fetchCloudUsers,
+  syncCloudUser,
+  deleteCloudUser,
+} from '../../lib/firestoreSync';
 
 interface UserManagerProps {
   applications: Application[];
@@ -61,6 +66,19 @@ export const UserManager: React.FC<UserManagerProps> = ({ applications }) => {
 
   const fetchUsers = async () => {
     setIsLoading(true);
+    // 1. Try Cloud Firestore first
+    try {
+      const cloudUsers = await fetchCloudUsers();
+      if (cloudUsers && cloudUsers.length > 0) {
+        setUsers(cloudUsers);
+        setIsLoading(false);
+        return;
+      }
+    } catch (e) {
+      console.warn('Fetch cloud users failed:', e);
+    }
+
+    // 2. Try server backend
     try {
       if (token && !token.startsWith('local_session_')) {
         const res = await fetch('/api/users', {
@@ -80,7 +98,7 @@ export const UserManager: React.FC<UserManagerProps> = ({ applications }) => {
       console.warn('Fetch users from server failed, using local storage:', err);
     }
 
-    // Local fallback
+    // 3. Local fallback
     const local = getLocalUsers().map(getSafeUser);
     setUsers(local);
     setIsLoading(false);
@@ -167,22 +185,25 @@ export const UserManager: React.FC<UserManagerProps> = ({ applications }) => {
 
         const contentType = res.headers.get('content-type') || '';
         if (res.ok && contentType.includes('application/json')) {
-          await addOrUpdateClientUser(payload);
+          const saved = await addOrUpdateClientUser(payload);
+          syncCloudUser(saved);
           setIsUserModalOpen(false);
           fetchUsers();
           return;
         }
       }
 
-      // Local fallback
-      await addOrUpdateClientUser(payload);
+      // Local fallback & Cloud Firestore sync
+      const saved = await addOrUpdateClientUser(payload);
+      syncCloudUser(saved);
       setIsUserModalOpen(false);
       fetchUsers();
       setFeedbackMessage({ type: 'success', text: `Akun @${payload.username} berhasil disimpan.` });
       setTimeout(() => setFeedbackMessage(null), 3000);
     } catch (err) {
-      console.warn('Save user server error, saving locally:', err);
-      await addOrUpdateClientUser(payload);
+      console.warn('Save user server error, saving locally & to cloud:', err);
+      const saved = await addOrUpdateClientUser(payload);
+      syncCloudUser(saved);
       setIsUserModalOpen(false);
       fetchUsers();
     } finally {
@@ -229,11 +250,13 @@ export const UserManager: React.FC<UserManagerProps> = ({ applications }) => {
           headers: { Authorization: `Bearer ${token}` },
         }).catch(() => {});
       }
-      toggleClientUserStatus(userId);
+      const toggled = toggleClientUserStatus(userId);
+      if (toggled) syncCloudUser(toggled);
       fetchUsers();
     } catch (err) {
       console.error('Toggle active error:', err);
-      toggleClientUserStatus(userId);
+      const toggled = toggleClientUserStatus(userId);
+      if (toggled) syncCloudUser(toggled);
       fetchUsers();
     }
   };
@@ -251,6 +274,7 @@ export const UserManager: React.FC<UserManagerProps> = ({ applications }) => {
       }
 
       deleteClientUser(deleteConfirmUser.id);
+      deleteCloudUser(deleteConfirmUser.id);
       setFeedbackMessage({ type: 'success', text: `Akun @${deleteConfirmUser.username} (${deleteConfirmUser.fullName}) berhasil dihapus.` });
       setDeleteConfirmUser(null);
       fetchUsers();
@@ -258,6 +282,7 @@ export const UserManager: React.FC<UserManagerProps> = ({ applications }) => {
     } catch (err) {
       console.error('Delete user error:', err);
       deleteClientUser(deleteConfirmUser.id);
+      deleteCloudUser(deleteConfirmUser.id);
       setFeedbackMessage({ type: 'success', text: `Akun @${deleteConfirmUser.username} berhasil dihapus.` });
       setDeleteConfirmUser(null);
       fetchUsers();
