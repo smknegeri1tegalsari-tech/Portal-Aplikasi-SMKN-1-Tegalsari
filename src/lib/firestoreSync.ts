@@ -25,15 +25,13 @@ import {
 export async function fetchCloudApplications(): Promise<Application[]> {
   try {
     const snap = await getDocs(collection(db, 'applications'));
-    if (!snap.empty) {
-      const apps: Application[] = [];
-      snap.forEach((d) => {
-        apps.push({ id: d.id, ...(d.data() as any) });
-      });
-      apps.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
-      saveLocalApplications(apps);
-      return apps;
-    }
+    const apps: Application[] = [];
+    snap.forEach((d) => {
+      apps.push({ id: d.id, ...(d.data() as any) });
+    });
+    apps.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+    saveLocalApplications(apps);
+    return apps;
   } catch (err) {
     console.warn('[Firestore] Failed to fetch applications from cloud:', err);
   }
@@ -95,15 +93,13 @@ export function subscribeCloudApplications(
 export async function fetchCloudCategories(): Promise<Category[]> {
   try {
     const snap = await getDocs(collection(db, 'categories'));
-    if (!snap.empty) {
-      const cats: Category[] = [];
-      snap.forEach((d) => {
-        cats.push({ id: d.id, ...(d.data() as any) });
-      });
-      cats.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
-      saveLocalCategories(cats);
-      return cats;
-    }
+    const cats: Category[] = [];
+    snap.forEach((d) => {
+      cats.push({ id: d.id, ...(d.data() as any) });
+    });
+    cats.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+    saveLocalCategories(cats);
+    return cats;
   } catch (err) {
     console.warn('[Firestore] Failed to fetch categories from cloud:', err);
   }
@@ -156,7 +152,10 @@ export function subscribeCloudCategories(
 
 export async function fetchCloudSettings(): Promise<PortalSettings> {
   try {
-    const snap = await getDoc(doc(db, 'settings', 'global-settings'));
+    let snap = await getDoc(doc(db, 'settings', 'global_settings'));
+    if (!snap.exists()) {
+      snap = await getDoc(doc(db, 'settings', 'global-settings'));
+    }
     if (snap.exists()) {
       const data = snap.data() as PortalSettings;
       saveLocalSettings(data);
@@ -170,6 +169,7 @@ export async function fetchCloudSettings(): Promise<PortalSettings> {
 
 export async function syncCloudSettings(settings: PortalSettings): Promise<void> {
   try {
+    await setDoc(doc(db, 'settings', 'global_settings'), settings, { merge: true });
     await setDoc(doc(db, 'settings', 'global-settings'), settings, { merge: true });
   } catch (err) {
     console.warn('[Firestore] Failed to sync settings to cloud:', err);

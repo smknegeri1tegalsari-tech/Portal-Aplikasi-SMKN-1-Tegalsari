@@ -136,31 +136,59 @@ async function syncFromCloudFirestore() {
     const { db } = await import('./src/lib/firebase.ts');
     const { collection, getDocs, doc, getDoc } = await import('firebase/firestore');
 
+    // 1. Applications: directly mirror online Cloud Firestore
     const snapApps = await getDocs(collection(db, 'applications'));
-    if (!snapApps.empty) {
-      const cloudApps: Application[] = [];
-      snapApps.forEach((d) => {
-        cloudApps.push({ id: d.id, ...(d.data() as any) });
-      });
-      cloudApps.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
-      dbState.applications = cloudApps;
-      console.log(`[Database] Cloud Firestore: ${cloudApps.length} applications synced into server.`);
-    }
+    const cloudApps: Application[] = [];
+    snapApps.forEach((d) => {
+      cloudApps.push({ id: d.id, ...(d.data() as any) });
+    });
+    cloudApps.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+    dbState.applications = cloudApps;
+    console.log(`[Database] Cloud Firestore: ${cloudApps.length} applications synced into server.`);
 
+    // 2. Categories: directly mirror online Cloud Firestore
     const snapCats = await getDocs(collection(db, 'categories'));
-    if (!snapCats.empty) {
-      const cloudCats: Category[] = [];
-      snapCats.forEach((d) => {
-        cloudCats.push({ id: d.id, ...(d.data() as any) });
-      });
-      cloudCats.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
-      dbState.categories = cloudCats;
-      console.log(`[Database] Cloud Firestore: ${cloudCats.length} categories synced into server.`);
-    }
+    const cloudCats: Category[] = [];
+    snapCats.forEach((d) => {
+      cloudCats.push({ id: d.id, ...(d.data() as any) });
+    });
+    cloudCats.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+    dbState.categories = cloudCats;
+    console.log(`[Database] Cloud Firestore: ${cloudCats.length} categories synced into server.`);
 
-    const snapSettings = await getDoc(doc(db, 'settings', 'global_settings'));
+    // 3. Settings: directly mirror online Cloud Firestore
+    let snapSettings = await getDoc(doc(db, 'settings', 'global_settings'));
+    if (!snapSettings.exists()) {
+      snapSettings = await getDoc(doc(db, 'settings', 'global-settings'));
+    }
     if (snapSettings.exists()) {
       dbState.settings = { ...dbState.settings, ...(snapSettings.data() as any) };
+    }
+
+    // 4. Users: directly mirror online Cloud Firestore
+    const snapUsers = await getDocs(collection(db, 'users'));
+    if (!snapUsers.empty) {
+      const cloudUsers: (User & { passwordHash: string })[] = [];
+      const defaultHash = hashPassword('admin123');
+      snapUsers.forEach((d) => {
+        const u = d.data() as any;
+        cloudUsers.push({
+          id: d.id,
+          username: u.username || d.id,
+          email: u.email || '',
+          fullName: u.fullName || u.username || 'User',
+          role: u.role || 'ADMIN',
+          department: u.department || 'Admin',
+          allowedAppIds: u.allowedAppIds || [],
+          isActive: u.isActive !== false,
+          passwordHash: u.passwordHash || defaultHash,
+          lastLoginAt: u.lastLoginAt,
+          createdAt: u.createdAt || new Date().toISOString(),
+          updatedAt: u.updatedAt || new Date().toISOString(),
+        });
+      });
+      dbState.users = cloudUsers;
+      console.log(`[Database] Cloud Firestore: ${cloudUsers.length} users synced into server.`);
     }
 
     saveDb();
@@ -174,13 +202,12 @@ function loadDb() {
     if (fs.existsSync(DB_FILE)) {
       const raw = fs.readFileSync(DB_FILE, 'utf-8');
       dbState = JSON.parse(raw);
-      ensureDefaultUsers();
-      console.log(`[Database] Loaded existing database with ${dbState.applications.length} apps, ${dbState.users.length} users.`);
+      console.log(`[Database] Loaded local cache with ${dbState.applications.length} apps, ${dbState.users.length} users.`);
     } else {
       resetDefaultData();
     }
   } catch (err) {
-    console.warn('[Database] Could not read file, re-initializing default data:', err);
+    console.warn('[Database] Could not read file, initializing clean state:', err);
     resetDefaultData();
   }
 
@@ -197,41 +224,14 @@ function saveDb() {
 }
 
 function resetDefaultData() {
-  const usersWithHash = INITIAL_USERS.map((u) => ({
-    id: u.id,
-    username: u.username,
-    email: u.email,
-    fullName: u.fullName,
-    role: u.role,
-    department: u.department,
-    isActive: u.isActive,
-    passwordHash: hashPassword(u.initialPassword || 'admin123'),
-    createdAt: u.createdAt,
-    updatedAt: u.updatedAt,
-  }));
-
   dbState = {
-    users: usersWithHash,
-    applications: [...INITIAL_APPLICATIONS],
-    categories: [...INITIAL_CATEGORIES],
-    accessLogs: [
-      {
-        id: `log-${Date.now()}-init`,
-        userId: 'system',
-        username: 'system',
-        role: 'SUPER_ADMIN',
-        action: 'UPDATE_SETTINGS',
-        details: 'Sistem Portal Terpadu SMKN 1 Tegalsari diinisialisasi.',
-        ipAddress: '127.0.0.1',
-        userAgent: 'Server-Init',
-        timestamp: new Date().toISOString(),
-      },
-    ],
+    users: [],
+    applications: [],
+    categories: [],
+    accessLogs: [],
     settings: { ...INITIAL_SETTINGS },
   };
-
   saveDb();
-  console.log('[Database] Seeded initial school applications and users.');
 }
 
 // Security Log Helper

@@ -44,9 +44,7 @@ export function getLocalApplications(): Application[] {
       console.error('[portalStorage] Error parsing applications:', e);
     }
   }
-  // Initialize with INITIAL_APPLICATIONS only on very first clean install
-  saveLocalApplications(INITIAL_APPLICATIONS);
-  return INITIAL_APPLICATIONS;
+  return [];
 }
 
 export function saveLocalApplications(apps: Application[]): void {
@@ -135,8 +133,7 @@ export function getLocalCategories(): Category[] {
       console.error('[portalStorage] Error parsing categories:', e);
     }
   }
-  saveLocalCategories(INITIAL_CATEGORIES);
-  return INITIAL_CATEGORIES;
+  return [];
 }
 
 export function saveLocalCategories(cats: Category[]): void {

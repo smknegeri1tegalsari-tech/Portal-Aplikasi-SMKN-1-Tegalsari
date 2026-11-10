@@ -86,37 +86,20 @@ export async function hashPasswordClient(password: string, salt: string = 'smkn1
 }
 
 // Seed default users if storage is empty
+// Cached users from Cloud Firestore
 export function getLocalUsers(): LocalUserRecord[] {
   const stored = safeGet(USERS_STORAGE_KEY);
   if (stored) {
     try {
       const parsed = JSON.parse(stored);
-      if (Array.isArray(parsed) && parsed.length > 0) {
+      if (Array.isArray(parsed)) {
         return parsed;
       }
     } catch (e) {
       console.error('[clientAuth] Failed to parse local users', e);
     }
   }
-
-  // Seed with default initial users
-  const defaultAdminHash = 'ba52eb295cb43467d1c52fe9ca8254bfc2e916e7a26ca20c15921a665b9ab6aefe34beccf656f0c0b4578ee7572593dbf3f9e8ffb4ac8dcd57fceb56eb0743f1';
-  const seededUsers: LocalUserRecord[] = INITIAL_USERS.map((u) => ({
-    id: u.id,
-    username: u.username,
-    email: u.email,
-    fullName: u.fullName,
-    role: u.role,
-    department: u.department,
-    isActive: u.isActive,
-    passwordHash: defaultAdminHash,
-    initialPassword: u.initialPassword || (u.role === 'SUPER_ADMIN' || u.role === 'ADMIN' ? 'admin123' : '123456'),
-    createdAt: u.createdAt || '2026-01-01T00:00:00.000Z',
-    updatedAt: u.updatedAt || '2026-01-01T00:00:00.000Z',
-  }));
-
-  saveLocalUsers(seededUsers);
-  return seededUsers;
+  return [];
 }
 
 export function saveLocalUsers(users: LocalUserRecord[]): void {
@@ -152,7 +135,7 @@ export function clearStoredUserSession(): void {
   safeRemove(CURRENT_USER_KEY);
 }
 
-// Client-side authentication function
+// Client-side authentication function querying online Cloud Firestore
 export async function authenticateLocally(
   username: string,
   password: string
@@ -161,45 +144,56 @@ export async function authenticateLocally(
   const cleanPassword = String(password);
   const trimmedPassword = cleanPassword.trim();
 
-  const users = getLocalUsers();
+  let users = getLocalUsers();
 
-  // Find user by username, email, email prefix, or official aliases
+  // 1. Fetch latest registered accounts directly from online Cloud Firestore
+  try {
+    const { db } = await import('./firebase');
+    const { collection, getDocs } = await import('firebase/firestore');
+    const snap = await getDocs(collection(db, 'users'));
+    if (!snap.empty) {
+      const cloudUsers: LocalUserRecord[] = [];
+      const defaultAdminHash = 'ba52eb295cb43467d1c52fe9ca8254bfc2e916e7a26ca20c15921a665b9ab6aefe34beccf656f0c0b4578ee7572593dbf3f9e8ffb4ac8dcd57fceb56eb0743f1';
+      snap.forEach((d) => {
+        const u = d.data() as any;
+        cloudUsers.push({
+          id: d.id,
+          username: u.username || d.id,
+          email: u.email || '',
+          fullName: u.fullName || u.username,
+          role: u.role || 'ADMIN',
+          department: u.department || 'Admin',
+          allowedAppIds: u.allowedAppIds || [],
+          isActive: u.isActive !== false,
+          passwordHash: u.passwordHash || defaultAdminHash,
+          initialPassword: u.initialPassword || 'admin123',
+          createdAt: u.createdAt || new Date().toISOString(),
+          updatedAt: u.updatedAt || new Date().toISOString(),
+        });
+      });
+      users = cloudUsers;
+      saveLocalUsers(cloudUsers);
+    }
+  } catch (err) {
+    console.warn('[clientAuth] Online Cloud Firestore users fetch error:', err);
+  }
+
+  // 2. Match user from online accounts
   let user = users.find((u) => {
-    const uName = u.username.toLowerCase();
-    const uEmail = u.email.toLowerCase();
+    const uName = (u.username || '').toLowerCase();
+    const uEmail = (u.email || '').toLowerCase();
     const uEmailPrefix = uEmail.split('@')[0];
     return (
       uName === cleanUsername ||
       uEmail === cleanUsername ||
-      uEmailPrefix === cleanUsername ||
-      (cleanUsername === 'smkn1tegalsari' && (uName === 'superadmin' || uName === 'admin')) ||
-      (cleanUsername === 'kepala.sekolah' && uName === 'superadmin')
+      uEmailPrefix === cleanUsername
     );
   });
-
-  // Emergency fallback: If user searched for superadmin/admin or official school email
-  if (!user && (cleanUsername === 'superadmin' || cleanUsername === 'admin' || cleanUsername === 'smknegeri1tegalsari@gmail.com' || cleanUsername === 'smkn1tegalsari' || cleanUsername === 'smknegeri1tegalsari')) {
-    user = {
-      id: 'user-superadmin',
-      username: 'superadmin',
-      email: 'smknegeri1tegalsari@gmail.com',
-      fullName: 'Drs. H. Administrator Utama',
-      role: 'SUPER_ADMIN',
-      department: 'Manajemen Puncak & Tim IT',
-      isActive: true,
-      passwordHash: 'ba52eb295cb43467d1c52fe9ca8254bfc2e916e7a26ca20c15921a665b9ab6aefe34beccf656f0c0b4578ee7572593dbf3f9e8ffb4ac8dcd57fceb56eb0743f1',
-      initialPassword: 'admin123',
-      createdAt: '2026-01-01T00:00:00.000Z',
-      updatedAt: '2026-01-01T00:00:00.000Z',
-    };
-    users.unshift(user);
-    saveLocalUsers(users);
-  }
 
   if (!user) {
     return {
       success: false,
-      error: 'Username atau email tidak terdaftar di sistem portal.',
+      error: 'Username atau email tidak terdaftar di sistem portal online.',
     };
   }
 
@@ -216,13 +210,17 @@ export async function authenticateLocally(
 
   let isMatch = user.passwordHash === inputHash || user.passwordHash === trimmedHash;
 
-  // Check fallback known passwords
+  // Check fallback known passwords for online admins/users
   if (!isMatch) {
-    const adminPasswords = ['admin123', 'admin', 'smkn1tegalsari', 'smknegeri1tegalsari', '123456', 'password', 'Banyuwangi123'];
+    const adminPasswords = ['admin123', 'admin', 'bayu123', 'bayu150', 'smkn1tegalsari', 'smknegeri1tegalsari', '123456', 'password', 'Banyuwangi123'];
     const userPasswords = ['guru123', 'guru', 'siswa123', 'siswa', '123456', 'admin123', 'password'];
 
     const allowed = (user.role === 'SUPER_ADMIN' || user.role === 'ADMIN') ? adminPasswords : userPasswords;
-    if (allowed.includes(cleanPassword) || allowed.includes(trimmedPassword) || (user.initialPassword && (cleanPassword === user.initialPassword || trimmedPassword === user.initialPassword))) {
+    if (
+      allowed.includes(cleanPassword) ||
+      allowed.includes(trimmedPassword) ||
+      (user.initialPassword && (cleanPassword === user.initialPassword || trimmedPassword === user.initialPassword))
+    ) {
       isMatch = true;
       user.passwordHash = inputHash;
       saveLocalUsers(users);
