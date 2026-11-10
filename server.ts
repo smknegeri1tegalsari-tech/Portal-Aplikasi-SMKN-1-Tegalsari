@@ -197,6 +197,85 @@ async function syncFromCloudFirestore() {
   }
 }
 
+function cleanDataForFirestore<T extends Record<string, any>>(obj: T): Record<string, any> {
+  const cleaned: Record<string, any> = {};
+  for (const [key, val] of Object.entries(obj)) {
+    if (val !== undefined) {
+      cleaned[key] = val;
+    }
+  }
+  return cleaned;
+}
+
+async function syncAppToCloud(app: Application): Promise<void> {
+  try {
+    const { db } = await import('./src/lib/firebase.ts');
+    const { doc, setDoc } = await import('firebase/firestore');
+    const cleaned = cleanDataForFirestore(app);
+    await setDoc(doc(db, 'applications', app.id), cleaned, { merge: true });
+    console.log(`[Firestore Backend] Saved application ${app.name} (${app.id})`);
+  } catch (err) {
+    console.error('[Firestore Backend] Error saving app to Firestore:', err);
+  }
+}
+
+async function deleteAppFromCloud(appId: string): Promise<void> {
+  try {
+    const { db } = await import('./src/lib/firebase.ts');
+    const { doc, deleteDoc } = await import('firebase/firestore');
+    await deleteDoc(doc(db, 'applications', appId));
+    console.log(`[Firestore Backend] Deleted application (${appId})`);
+  } catch (err) {
+    console.error('[Firestore Backend] Error deleting app from Firestore:', err);
+  }
+}
+
+async function syncCategoryToCloud(cat: Category): Promise<void> {
+  try {
+    const { db } = await import('./src/lib/firebase.ts');
+    const { doc, setDoc } = await import('firebase/firestore');
+    const cleaned = cleanDataForFirestore(cat);
+    await setDoc(doc(db, 'categories', cat.id), cleaned, { merge: true });
+    console.log(`[Firestore Backend] Saved category ${cat.name} (${cat.id})`);
+  } catch (err) {
+    console.error('[Firestore Backend] Error saving category to Firestore:', err);
+  }
+}
+
+async function deleteCategoryFromCloud(catId: string): Promise<void> {
+  try {
+    const { db } = await import('./src/lib/firebase.ts');
+    const { doc, deleteDoc } = await import('firebase/firestore');
+    await deleteDoc(doc(db, 'categories', catId));
+    console.log(`[Firestore Backend] Deleted category (${catId})`);
+  } catch (err) {
+    console.error('[Firestore Backend] Error deleting category from Firestore:', err);
+  }
+}
+
+async function syncUserToCloud(user: User): Promise<void> {
+  try {
+    const { db } = await import('./src/lib/firebase.ts');
+    const { doc, setDoc } = await import('firebase/firestore');
+    const cleaned = cleanDataForFirestore(user);
+    await setDoc(doc(db, 'users', user.id), cleaned, { merge: true });
+    console.log(`[Firestore Backend] Saved user ${user.username} (${user.id})`);
+  } catch (err) {
+    console.error('[Firestore Backend] Error saving user to Firestore:', err);
+  }
+}
+
+async function deleteUserFromCloud(userId: string): Promise<void> {
+  try {
+    const { db } = await import('./src/lib/firebase.ts');
+    const { doc, deleteDoc } = await import('firebase/firestore');
+    await deleteDoc(doc(db, 'users', userId));
+    console.log(`[Firestore Backend] Deleted user (${userId})`);
+  } catch (err) {
+    console.error('[Firestore Backend] Error deleting user from Firestore:', err);
+  }
+}
+
 function loadDb() {
   try {
     if (fs.existsSync(DB_FILE)) {
@@ -703,9 +782,9 @@ async function startServer() {
   });
 
   // POST /api/applications (Create App - Admin/SuperAdmin)
-  app.post('/api/applications', authenticateToken, requireAdmin, (req: Request, res: Response) => {
+  app.post('/api/applications', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
     const user = (req as any).user as User;
-    const { name, description, categoryId, iconName, targetUrl, allowedRoles, isActive, badge } = req.body;
+    const { id, name, description, categoryId, iconName, targetUrl, allowedRoles, isActive, badge, sortOrder } = req.body;
 
     if (!name || !targetUrl || !categoryId) {
       res.status(400).json({ error: 'Nama aplikasi, URL target, dan kategori wajib diisi' });
@@ -718,8 +797,9 @@ async function startServer() {
       return;
     }
 
+    const appId = id ? String(id).trim() : `app-${Date.now()}`;
     const newApp: Application = {
-      id: `app-${Date.now()}`,
+      id: appId,
       name: String(name).trim(),
       description: description ? String(description).trim() : '',
       categoryId: String(categoryId),
@@ -727,15 +807,26 @@ async function startServer() {
       targetUrl: String(targetUrl).trim(),
       allowedRoles: Array.isArray(allowedRoles) && allowedRoles.length > 0 ? allowedRoles : ['SUPER_ADMIN', 'ADMIN', 'USER'],
       isActive: isActive !== undefined ? Boolean(isActive) : true,
-      sortOrder: dbState.applications.length + 1,
+      sortOrder: sortOrder !== undefined ? Number(sortOrder) : dbState.applications.length + 1,
       openCount: 0,
-      badge: badge ? String(badge).trim() : undefined,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
 
-    dbState.applications.push(newApp);
+    if (badge && String(badge).trim()) {
+      newApp.badge = String(badge).trim();
+    }
+
+    const existingIdx = dbState.applications.findIndex((a) => a.id === appId);
+    if (existingIdx >= 0) {
+      dbState.applications[existingIdx] = newApp;
+    } else {
+      dbState.applications.push(newApp);
+    }
     saveDb();
+
+    // Persist to online Cloud Firestore
+    await syncAppToCloud(newApp);
 
     recordLog(user.id, user.username, user.role, 'CREATE_APP', `Menambahkan aplikasi baru: ${newApp.name}`, newApp.id, newApp.name, req);
 
@@ -743,7 +834,7 @@ async function startServer() {
   });
 
   // PUT /api/applications/:id (Update App - Admin/SuperAdmin)
-  app.put('/api/applications/:id', authenticateToken, requireAdmin, (req: Request, res: Response) => {
+  app.put('/api/applications/:id', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
     const user = (req as any).user as User;
     const appId = req.params.id;
     const { name, description, categoryId, iconName, targetUrl, allowedRoles, isActive, badge, sortOrder } = req.body;
@@ -756,19 +847,22 @@ async function startServer() {
         id: appId,
         name: name !== undefined ? String(name).trim() : 'Aplikasi Baru',
         description: description !== undefined ? String(description).trim() : '',
-        categoryId: categoryId !== undefined ? String(categoryId) : 'cat-akademik',
+        categoryId: categoryId !== undefined ? String(categoryId) : 'cat-1794205545810',
         iconName: iconName !== undefined ? String(iconName) : 'ExternalLink',
         targetUrl: targetUrl !== undefined ? String(targetUrl).trim() : 'https://smkn1tegalsari.sch.id',
         allowedRoles: Array.isArray(allowedRoles) ? allowedRoles : ['SUPER_ADMIN', 'ADMIN', 'USER'],
         isActive: isActive !== undefined ? Boolean(isActive) : true,
         sortOrder: sortOrder !== undefined ? Number(sortOrder) : dbState.applications.length + 1,
         openCount: 0,
-        badge: badge !== undefined ? String(badge).trim() : undefined,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
+      if (badge && String(badge).trim()) {
+        newApp.badge = String(badge).trim();
+      }
       dbState.applications.push(newApp);
       saveDb();
+      await syncAppToCloud(newApp);
       recordLog(user.id, user.username, user.role, 'CREATE_APP', `Menambahkan aplikasi baru: ${newApp.name}`, newApp.id, newApp.name, req);
       res.json({ success: true, application: newApp });
       return;
@@ -784,12 +878,20 @@ async function startServer() {
       allowedRoles: Array.isArray(allowedRoles) ? allowedRoles : existing.allowedRoles,
       isActive: isActive !== undefined ? Boolean(isActive) : existing.isActive,
       sortOrder: sortOrder !== undefined ? Number(sortOrder) : existing.sortOrder,
-      badge: badge !== undefined ? String(badge).trim() : existing.badge,
       updatedAt: new Date().toISOString(),
     };
 
+    if (badge !== undefined) {
+      if (String(badge).trim()) {
+        updated.badge = String(badge).trim();
+      } else {
+        delete updated.badge;
+      }
+    }
+
     dbState.applications[appIndex] = updated;
     saveDb();
+    await syncAppToCloud(updated);
 
     recordLog(user.id, user.username, user.role, 'UPDATE_APP', `Memperbarui data aplikasi: ${updated.name}`, updated.id, updated.name, req);
 
@@ -797,13 +899,14 @@ async function startServer() {
   });
 
   // DELETE /api/applications/:id (Delete App - SuperAdmin or Admin)
-  app.delete('/api/applications/:id', authenticateToken, requireAdmin, (req: Request, res: Response) => {
+  app.delete('/api/applications/:id', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
     const user = (req as any).user as User;
     const appId = req.params.id;
 
     const targetApp = dbState.applications.find((a) => a.id === appId);
     dbState.applications = dbState.applications.filter((a) => a.id !== appId);
     saveDb();
+    await deleteAppFromCloud(appId);
 
     if (targetApp) {
       recordLog(user.id, user.username, user.role, 'DELETE_APP', `Menghapus aplikasi: ${targetApp.name}`, targetApp.id, targetApp.name, req);
@@ -813,7 +916,7 @@ async function startServer() {
   });
 
   // PATCH /api/applications/:id/toggle (Toggle Active Status)
-  app.patch('/api/applications/:id/toggle', authenticateToken, requireAdmin, (req: Request, res: Response) => {
+  app.patch('/api/applications/:id/toggle', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
     const user = (req as any).user as User;
     const appId = req.params.id;
 
@@ -826,6 +929,7 @@ async function startServer() {
     appItem.isActive = !appItem.isActive;
     appItem.updatedAt = new Date().toISOString();
     saveDb();
+    await syncAppToCloud(appItem);
 
     recordLog(
       user.id,
@@ -1096,28 +1200,35 @@ async function startServer() {
     res.json({ success: true, categories: dbState.categories });
   });
 
-  app.post('/api/categories', authenticateToken, requireAdmin, (req: Request, res: Response) => {
-    const { name, description } = req.body;
+  app.post('/api/categories', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+    const { id, name, description } = req.body;
     if (!name) {
       res.status(400).json({ error: 'Nama kategori wajib diisi' });
       return;
     }
 
+    const catId = id ? String(id).trim() : `cat-${Date.now()}`;
     const newCategory: Category = {
-      id: `cat-${Date.now()}`,
+      id: catId,
       name: String(name).trim(),
       description: description ? String(description).trim() : '',
       sortOrder: dbState.categories.length + 1,
       createdAt: new Date().toISOString(),
     };
 
-    dbState.categories.push(newCategory);
+    const existingIdx = dbState.categories.findIndex((c) => c.id === catId);
+    if (existingIdx >= 0) {
+      dbState.categories[existingIdx] = newCategory;
+    } else {
+      dbState.categories.push(newCategory);
+    }
     saveDb();
+    await syncCategoryToCloud(newCategory);
 
     res.status(201).json({ success: true, category: newCategory });
   });
 
-  app.put('/api/categories/:id', authenticateToken, requireAdmin, (req: Request, res: Response) => {
+  app.put('/api/categories/:id', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
     const catId = req.params.id;
     const { name, description } = req.body;
 
@@ -1130,14 +1241,16 @@ async function startServer() {
     if (name) cat.name = String(name).trim();
     if (description !== undefined) cat.description = String(description).trim();
     saveDb();
+    await syncCategoryToCloud(cat);
 
     res.json({ success: true, category: cat });
   });
 
-  app.delete('/api/categories/:id', authenticateToken, requireAdmin, (req: Request, res: Response) => {
+  app.delete('/api/categories/:id', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
     const catId = req.params.id;
     dbState.categories = dbState.categories.filter((c) => c.id !== catId);
     saveDb();
+    await deleteCategoryFromCloud(catId);
     res.json({ success: true, message: 'Kategori berhasil dihapus' });
   });
 

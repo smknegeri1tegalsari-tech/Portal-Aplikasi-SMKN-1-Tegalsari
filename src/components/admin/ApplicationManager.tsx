@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Plus,
   Edit2,
@@ -80,11 +80,17 @@ export const ApplicationManager: React.FC<ApplicationManagerProps> = ({
   const [formAllowedRoles, setFormAllowedRoles] = useState<UserRole[]>(['SUPER_ADMIN', 'ADMIN', 'USER']);
   const [formIsActive, setFormIsActive] = useState(true);
 
+  useEffect(() => {
+    if (!formCategoryId && categories.length > 0) {
+      setFormCategoryId(categories[0].id);
+    }
+  }, [categories, formCategoryId]);
+
   const openCreateModal = () => {
     setEditingApp(null);
     setFormName('');
     setFormDescription('');
-    setFormCategoryId(categories[0]?.id || 'cat-administrasi');
+    setFormCategoryId(categories.length > 0 ? categories[0].id : '');
     setFormTargetUrl('https://');
     setFormIconName('Laptop');
     setFormBadge('');
@@ -124,15 +130,19 @@ export const ApplicationManager: React.FC<ApplicationManagerProps> = ({
     e.preventDefault();
     setError(null);
 
-    if (!formName.trim()) {
+    const cleanName = formName.trim();
+    const cleanUrl = formTargetUrl.trim();
+    const targetCategoryId = formCategoryId || (categories.length > 0 ? categories[0].id : '');
+
+    if (!cleanName) {
       setError('Nama aplikasi wajib diisi');
       return;
     }
-    if (!formTargetUrl.startsWith('http://') && !formTargetUrl.startsWith('https://')) {
+    if (!cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://')) {
       setError('URL target harus diawali dengan http:// atau https://');
       return;
     }
-    if (!formCategoryId) {
+    if (!targetCategoryId) {
       setError('Pilih kategori untuk aplikasi');
       return;
     }
@@ -141,12 +151,11 @@ export const ApplicationManager: React.FC<ApplicationManagerProps> = ({
     const appId = editingApp ? editingApp.id : `app-${Date.now()}`;
     const appPayload: Application = {
       id: appId,
-      name: formName.trim(),
+      name: cleanName,
       description: formDescription.trim(),
-      categoryId: formCategoryId,
-      targetUrl: formTargetUrl.trim(),
+      categoryId: targetCategoryId,
+      targetUrl: cleanUrl,
       iconName: formIconName,
-      badge: formBadge.trim() || undefined,
       allowedRoles: formAllowedRoles,
       isActive: formIsActive,
       sortOrder: editingApp ? editingApp.sortOrder : applications.length + 1,
@@ -154,6 +163,10 @@ export const ApplicationManager: React.FC<ApplicationManagerProps> = ({
       createdAt: editingApp ? editingApp.createdAt : new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
+
+    if (formBadge.trim()) {
+      appPayload.badge = formBadge.trim();
+    }
 
     // 1. Immediately update parent state so UI updates with 0ms latency
     const updatedList = editingApp
@@ -171,7 +184,7 @@ export const ApplicationManager: React.FC<ApplicationManagerProps> = ({
     try {
       await syncCloudApplication(appPayload);
     } catch (err) {
-      console.warn('[Firestore] App sync warning:', err);
+      console.error('[Firestore] App sync error:', err);
     }
 
     // 4. Await backend server sync
@@ -190,6 +203,11 @@ export const ApplicationManager: React.FC<ApplicationManagerProps> = ({
       });
     } catch (err) {
       console.warn('[Server] App sync warning:', err);
+    }
+
+    // 5. Trigger catalog reload from primary database
+    if (onRefresh) {
+      onRefresh();
     }
 
     setIsSubmitting(false);

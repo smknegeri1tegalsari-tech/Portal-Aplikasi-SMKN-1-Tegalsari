@@ -130,12 +130,12 @@ function PortalAppContent() {
       ]);
 
       let cloudAppsFound = false;
-      if (cloudApps && cloudApps.length > 0) {
+      if (cloudApps !== null && Array.isArray(cloudApps)) {
         setApplications(cloudApps);
         saveLocalApplications(cloudApps);
         cloudAppsFound = true;
       }
-      if (cloudCats && cloudCats.length > 0) {
+      if (cloudCats !== null && Array.isArray(cloudCats) && cloudCats.length > 0) {
         setCategories(cloudCats);
         saveLocalCategories(cloudCats);
       }
@@ -161,7 +161,7 @@ function PortalAppContent() {
           const contentType = resApps.headers.get('content-type') || '';
           if (contentType.includes('application/json')) {
             const data = await resApps.json();
-            if (data.applications && Array.isArray(data.applications) && data.applications.length > 0) {
+            if (data.applications && Array.isArray(data.applications)) {
               setApplications(data.applications);
               saveLocalApplications(data.applications);
             }
@@ -198,7 +198,7 @@ function PortalAppContent() {
 
     // 1. Fetch initial cloud data from Firestore
     fetchCloudApplications().then((cloudApps) => {
-      if (cloudApps && cloudApps.length > 0) setApplications(cloudApps);
+      if (cloudApps !== null && Array.isArray(cloudApps)) setApplications(cloudApps);
     });
     fetchCloudCategories().then((cloudCats) => {
       if (cloudCats && cloudCats.length > 0) setCategories(cloudCats);
@@ -209,7 +209,7 @@ function PortalAppContent() {
 
     // 2. Real-time multi-device cloud synchronization listeners
     const unsubApps = subscribeCloudApplications((cloudApps) => {
-      if (cloudApps && cloudApps.length > 0) {
+      if (cloudApps !== null && Array.isArray(cloudApps)) {
         setApplications(cloudApps);
       }
     });

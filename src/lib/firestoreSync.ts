@@ -38,12 +38,25 @@ export async function fetchCloudApplications(): Promise<Application[]> {
   return getLocalApplications();
 }
 
+// Clean helper: Firestore rejects any object containing `undefined` values
+export function cleanFirestoreData<T extends Record<string, any>>(obj: T): Record<string, any> {
+  const cleaned: Record<string, any> = {};
+  for (const [key, val] of Object.entries(obj)) {
+    if (val !== undefined) {
+      cleaned[key] = val;
+    }
+  }
+  return cleaned;
+}
+
 export async function syncCloudApplication(app: Application): Promise<void> {
   const path = `applications/${app.id}`;
   try {
-    await setDoc(doc(db, 'applications', app.id), app, { merge: true });
+    const cleaned = cleanFirestoreData(app);
+    await setDoc(doc(db, 'applications', app.id), cleaned, { merge: true });
+    console.log(`[Firestore] Successfully saved application ${app.name} (${app.id}) to Cloud Firestore`);
   } catch (err) {
-    console.warn('[Firestore] Failed to sync application to cloud:', err);
+    console.error('[Firestore] Failed to sync application to cloud:', err);
     try {
       handleFirestoreError(err, OperationType.WRITE, path);
     } catch {
@@ -56,8 +69,9 @@ export async function deleteCloudApplication(appId: string): Promise<void> {
   const path = `applications/${appId}`;
   try {
     await deleteDoc(doc(db, 'applications', appId));
+    console.log(`[Firestore] Successfully deleted application ${appId} from Cloud Firestore`);
   } catch (err) {
-    console.warn('[Firestore] Failed to delete application in cloud:', err);
+    console.error('[Firestore] Failed to delete application in cloud:', err);
   }
 }
 
@@ -108,17 +122,20 @@ export async function fetchCloudCategories(): Promise<Category[]> {
 
 export async function syncCloudCategory(cat: Category): Promise<void> {
   try {
-    await setDoc(doc(db, 'categories', cat.id), cat, { merge: true });
+    const cleaned = cleanFirestoreData(cat);
+    await setDoc(doc(db, 'categories', cat.id), cleaned, { merge: true });
+    console.log(`[Firestore] Successfully saved category ${cat.name} to Cloud Firestore`);
   } catch (err) {
-    console.warn('[Firestore] Failed to sync category to cloud:', err);
+    console.error('[Firestore] Failed to sync category to cloud:', err);
   }
 }
 
 export async function deleteCloudCategory(catId: string): Promise<void> {
   try {
     await deleteDoc(doc(db, 'categories', catId));
+    console.log(`[Firestore] Successfully deleted category ${catId} from Cloud Firestore`);
   } catch (err) {
-    console.warn('[Firestore] Failed to delete category in cloud:', err);
+    console.error('[Firestore] Failed to delete category in cloud:', err);
   }
 }
 
@@ -169,10 +186,11 @@ export async function fetchCloudSettings(): Promise<PortalSettings> {
 
 export async function syncCloudSettings(settings: PortalSettings): Promise<void> {
   try {
-    await setDoc(doc(db, 'settings', 'global_settings'), settings, { merge: true });
-    await setDoc(doc(db, 'settings', 'global-settings'), settings, { merge: true });
+    const cleaned = cleanFirestoreData(settings);
+    await setDoc(doc(db, 'settings', 'global_settings'), cleaned, { merge: true });
+    await setDoc(doc(db, 'settings', 'global-settings'), cleaned, { merge: true });
   } catch (err) {
-    console.warn('[Firestore] Failed to sync settings to cloud:', err);
+    console.error('[Firestore] Failed to sync settings to cloud:', err);
   }
 }
 
@@ -209,9 +227,10 @@ export async function fetchCloudUsers(): Promise<User[]> {
 
 export async function syncCloudUser(user: User): Promise<void> {
   try {
-    await setDoc(doc(db, 'users', user.id), user, { merge: true });
+    const cleaned = cleanFirestoreData(user);
+    await setDoc(doc(db, 'users', user.id), cleaned, { merge: true });
   } catch (err) {
-    console.warn('[Firestore] Failed to sync user to cloud:', err);
+    console.error('[Firestore] Failed to sync user to cloud:', err);
   }
 }
 
