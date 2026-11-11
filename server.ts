@@ -71,9 +71,15 @@ function ensureDefaultUsers() {
       updatedAt: new Date().toISOString(),
     });
     saveDb();
-  } else if (!superadmin.passwordHash) {
-    superadmin.passwordHash = defaultHash;
-    saveDb();
+  } else {
+    if (superadmin.role !== 'SUPER_ADMIN') {
+      superadmin.role = 'SUPER_ADMIN';
+      saveDb();
+    }
+    if (!superadmin.passwordHash) {
+      superadmin.passwordHash = defaultHash;
+      saveDb();
+    }
   }
 
   // Ensure admin exists
@@ -102,13 +108,16 @@ function ensureDefaultUsers() {
       username: 'guru.ahmad',
       email: 'ahmad.fauzi@smkn1tegalsari.sch.id',
       fullName: 'Ahmad Fauzi, S.Pd.',
-      role: 'USER',
+      role: 'GURU',
       department: 'Tenaga Pendidik / Guru Produktif',
       isActive: true,
       passwordHash: hashPassword('guru123'),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     });
+    saveDb();
+  } else if ((guru.role as any) === 'USER') {
+    guru.role = 'GURU';
     saveDb();
   }
 
@@ -120,13 +129,16 @@ function ensureDefaultUsers() {
       username: 'siswa.budi',
       email: 'budi.santoso@siswa.smkn1tegalsari.sch.id',
       fullName: 'Budi Santoso (XII RPL 1)',
-      role: 'USER',
+      role: 'SISWA',
       department: 'Siswa / Rekayasa Perangkat Lunak',
       isActive: true,
       passwordHash: hashPassword('siswa123'),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     });
+    saveDb();
+  } else if ((siswa.role as any) === 'USER') {
+    siswa.role = 'SISWA';
     saveDb();
   }
 }
@@ -140,7 +152,14 @@ async function syncFromCloudFirestore() {
     const snapApps = await getDocs(collection(db, 'applications'));
     const cloudApps: Application[] = [];
     snapApps.forEach((d) => {
-      cloudApps.push({ id: d.id, ...(d.data() as any) });
+      const appData = d.data() as any;
+      let allowedRoles: UserRole[] = appData.allowedRoles || ['SUPER_ADMIN', 'ADMIN', 'GURU', 'SISWA'];
+      if ((allowedRoles as any[]).includes('USER')) {
+        allowedRoles = allowedRoles.filter((r: any) => r !== 'USER');
+        if (!allowedRoles.includes('GURU')) allowedRoles.push('GURU');
+        if (!allowedRoles.includes('SISWA')) allowedRoles.push('SISWA');
+      }
+      cloudApps.push({ id: d.id, ...appData, allowedRoles });
     });
     cloudApps.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
     dbState.applications = cloudApps;
@@ -177,7 +196,7 @@ async function syncFromCloudFirestore() {
           username: u.username || d.id,
           email: u.email || '',
           fullName: u.fullName || u.username || 'User',
-          role: u.role || 'ADMIN',
+          role: (u.role === 'USER' ? 'GURU' : (u.role || 'GURU')) as UserRole,
           department: u.department || 'Admin',
           allowedAppIds: u.allowedAppIds || [],
           isActive: u.isActive !== false,
@@ -363,9 +382,12 @@ function authenticateToken(req: Request, res: Response, next: NextFunction): voi
 
   // Support local session tokens issued by resilient client-side auth
   if (!session && (token.startsWith('local_session_') || token.startsWith('portal_token_') || token.startsWith('google_local_'))) {
-    const superadmin = dbState.users.find((u) => u.role === 'SUPER_ADMIN') || dbState.users[0];
-    if (superadmin) {
-      session = { userId: superadmin.id, expiresAt: Date.now() + 30 * 24 * 60 * 60 * 1000 };
+    const adminUser =
+      dbState.users.find((u) => u.role === 'SUPER_ADMIN') ||
+      dbState.users.find((u) => u.role === 'ADMIN') ||
+      dbState.users[0];
+    if (adminUser) {
+      session = { userId: adminUser.id, expiresAt: Date.now() + 30 * 24 * 60 * 60 * 1000 };
       activeSessions.set(token, session);
     }
   }
@@ -556,7 +578,14 @@ async function startServer() {
     if (!user) {
       // Auto-register authorized school user
       const usernameFromEmail = cleanEmail.split('@')[0].replace(/[^a-zA-Z0-9._-]/g, '');
-      const newRole: UserRole = isSchoolAdminEmail ? 'SUPER_ADMIN' : 'USER';
+      let newRole: UserRole = 'GURU';
+      if (isSchoolAdminEmail || cleanEmail.includes('admin')) {
+        newRole = 'SUPER_ADMIN';
+      } else if (cleanEmail.includes('siswa')) {
+        newRole = 'SISWA';
+      } else {
+        newRole = 'GURU';
+      }
 
       user = {
         id: `user-g-${Date.now()}`,
@@ -564,7 +593,7 @@ async function startServer() {
         email: cleanEmail,
         fullName: fullName ? String(fullName).trim() : cleanEmail,
         role: newRole,
-        department: isSchoolAdminEmail ? 'Manajemen Puncak & Tim IT' : 'Warga SMKN 1 Tegalsari',
+        department: newRole === 'SISWA' ? 'Siswa SMKN 1 Tegalsari' : (newRole === 'SUPER_ADMIN' ? 'Manajemen Puncak & Tim IT' : 'Tenaga Pendidik / Guru'),
         isActive: true,
         passwordHash: hashPassword(crypto.randomBytes(16).toString('hex')),
         createdAt: new Date().toISOString(),
@@ -676,7 +705,10 @@ async function startServer() {
       let session = activeSessions.get(token);
 
       if (!session && (token.startsWith('local_session_') || token.startsWith('portal_token_') || token.startsWith('google_local_'))) {
-        const superadmin = dbState.users.find((u) => u.role === 'SUPER_ADMIN') || dbState.users[0];
+        const superadmin =
+          dbState.users.find((u) => u.role === 'SUPER_ADMIN') ||
+          dbState.users.find((u) => u.role === 'ADMIN') ||
+          dbState.users[0];
         if (superadmin) {
           session = { userId: superadmin.id, expiresAt: Date.now() + 30 * 24 * 60 * 60 * 1000 };
           activeSessions.set(token, session);
@@ -704,7 +736,11 @@ async function startServer() {
         if (!app.isActive && !isManager) return false;
         if (isManager) return true;
 
-        const roleAllowed = app.allowedRoles.includes(user!.role);
+        const roleAllowed =
+          app.allowedRoles.includes(user!.role) ||
+          (user!.role === 'GURU' && (app.allowedRoles as any).includes('USER')) ||
+          (user!.role === 'SISWA' && (app.allowedRoles as any).includes('USER')) ||
+          ((user!.role as any) === 'USER' && (app.allowedRoles.includes('GURU') || app.allowedRoles.includes('SISWA')));
         if (user!.allowedAppIds && user!.allowedAppIds.length > 0) {
           return user!.allowedAppIds.includes(app.id);
         }
@@ -734,9 +770,12 @@ async function startServer() {
       return;
     }
 
-    // Check Role & Specific Permissions
     const isManager = user.role === 'ADMIN' || user.role === 'SUPER_ADMIN';
-    const roleAllowed = application.allowedRoles.includes(user.role);
+    const roleAllowed =
+      application.allowedRoles.includes(user.role) ||
+      (user.role === 'GURU' && (application.allowedRoles as any).includes('USER')) ||
+      (user.role === 'SISWA' && (application.allowedRoles as any).includes('USER')) ||
+      ((user.role as any) === 'USER' && (application.allowedRoles.includes('GURU') || application.allowedRoles.includes('SISWA')));
     const userExplicitlyAllowed = user.allowedAppIds && user.allowedAppIds.includes(appId);
 
     if (!isManager && !roleAllowed && !userExplicitlyAllowed) {
@@ -805,7 +844,7 @@ async function startServer() {
       categoryId: String(categoryId),
       iconName: iconName || 'ExternalLink',
       targetUrl: String(targetUrl).trim(),
-      allowedRoles: Array.isArray(allowedRoles) && allowedRoles.length > 0 ? allowedRoles : ['SUPER_ADMIN', 'ADMIN', 'USER'],
+      allowedRoles: Array.isArray(allowedRoles) && allowedRoles.length > 0 ? allowedRoles : ['SUPER_ADMIN', 'ADMIN', 'GURU', 'SISWA'],
       isActive: isActive !== undefined ? Boolean(isActive) : true,
       sortOrder: sortOrder !== undefined ? Number(sortOrder) : dbState.applications.length + 1,
       openCount: 0,
@@ -850,7 +889,7 @@ async function startServer() {
         categoryId: categoryId !== undefined ? String(categoryId) : 'cat-1794205545810',
         iconName: iconName !== undefined ? String(iconName) : 'ExternalLink',
         targetUrl: targetUrl !== undefined ? String(targetUrl).trim() : 'https://smkn1tegalsari.sch.id',
-        allowedRoles: Array.isArray(allowedRoles) ? allowedRoles : ['SUPER_ADMIN', 'ADMIN', 'USER'],
+        allowedRoles: Array.isArray(allowedRoles) ? allowedRoles : ['SUPER_ADMIN', 'ADMIN', 'GURU', 'SISWA'],
         isActive: isActive !== undefined ? Boolean(isActive) : true,
         sortOrder: sortOrder !== undefined ? Number(sortOrder) : dbState.applications.length + 1,
         openCount: 0,
@@ -966,7 +1005,7 @@ async function startServer() {
   });
 
   // POST /api/users (Create User - Admin / SuperAdmin)
-  app.post('/api/users', authenticateToken, requireAdmin, (req: Request, res: Response) => {
+  app.post('/api/users', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
     const currentUser = (req as any).user as User;
     const { username, password, email, fullName, role, department, allowedAppIds } = req.body;
 
@@ -992,7 +1031,7 @@ async function startServer() {
       username: cleanUsername,
       email: email ? String(email).trim().toLowerCase() : `${cleanUsername}@smkn1tegalsari.sch.id`,
       fullName: String(fullName).trim(),
-      role: role as UserRole,
+      role: (role === 'USER' ? 'GURU' : role) as UserRole,
       department: department ? String(department).trim() : 'Umum',
       allowedAppIds: Array.isArray(allowedAppIds) ? allowedAppIds : undefined,
       isActive: true,
@@ -1003,6 +1042,7 @@ async function startServer() {
 
     dbState.users.push(newUser);
     saveDb();
+    await syncUserToCloud(newUser);
 
     recordLog(
       currentUser.id,
@@ -1020,7 +1060,7 @@ async function startServer() {
   });
 
   // PUT /api/users/:id (Update User details)
-  app.put('/api/users/:id', authenticateToken, requireAdmin, (req: Request, res: Response) => {
+  app.put('/api/users/:id', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
     const currentUser = (req as any).user as User;
     const targetUserId = req.params.id;
     const { fullName, email, role, department, allowedAppIds, isActive } = req.body;
@@ -1041,13 +1081,14 @@ async function startServer() {
 
     existing.fullName = fullName !== undefined ? String(fullName).trim() : existing.fullName;
     existing.email = email !== undefined ? String(email).trim().toLowerCase() : existing.email;
-    existing.role = role !== undefined ? role : existing.role;
+    existing.role = role !== undefined ? ((role === 'USER' ? 'GURU' : role) as UserRole) : existing.role;
     existing.department = department !== undefined ? String(department).trim() : existing.department;
     existing.allowedAppIds = Array.isArray(allowedAppIds) ? allowedAppIds : existing.allowedAppIds;
     if (isActive !== undefined) existing.isActive = Boolean(isActive);
     existing.updatedAt = new Date().toISOString();
 
     saveDb();
+    await syncUserToCloud(existing);
 
     recordLog(
       currentUser.id,
@@ -1144,7 +1185,7 @@ async function startServer() {
   });
 
   // DELETE /api/users/:id (Hapus Akun Pengguna)
-  app.delete('/api/users/:id', authenticateToken, requireAdmin, (req: Request, res: Response) => {
+  app.delete('/api/users/:id', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
     const currentUser = (req as any).user as User;
     const targetUserId = req.params.id;
 
@@ -1176,6 +1217,7 @@ async function startServer() {
     // Remove user from database
     dbState.users.splice(userIndex, 1);
     saveDb();
+    await deleteUserFromCloud(targetUserId);
 
     recordLog(
       currentUser.id,

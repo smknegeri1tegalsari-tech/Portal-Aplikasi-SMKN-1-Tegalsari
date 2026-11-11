@@ -77,7 +77,7 @@ export const ApplicationManager: React.FC<ApplicationManagerProps> = ({
   const [formTargetUrl, setFormTargetUrl] = useState('');
   const [formIconName, setFormIconName] = useState('ExternalLink');
   const [formBadge, setFormBadge] = useState('');
-  const [formAllowedRoles, setFormAllowedRoles] = useState<UserRole[]>(['SUPER_ADMIN', 'ADMIN', 'USER']);
+  const [formAllowedRoles, setFormAllowedRoles] = useState<UserRole[]>(['SUPER_ADMIN', 'ADMIN', 'GURU', 'SISWA']);
   const [formIsActive, setFormIsActive] = useState(true);
 
   useEffect(() => {
@@ -94,7 +94,7 @@ export const ApplicationManager: React.FC<ApplicationManagerProps> = ({
     setFormTargetUrl('https://');
     setFormIconName('Laptop');
     setFormBadge('');
-    setFormAllowedRoles(['SUPER_ADMIN', 'ADMIN', 'USER']);
+    setFormAllowedRoles(['SUPER_ADMIN', 'ADMIN', 'GURU', 'SISWA']);
     setFormIsActive(true);
     setError(null);
     setIsModalOpen(true);
@@ -108,7 +108,11 @@ export const ApplicationManager: React.FC<ApplicationManagerProps> = ({
     setFormTargetUrl(app.targetUrl);
     setFormIconName(app.iconName || 'ExternalLink');
     setFormBadge(app.badge || '');
-    setFormAllowedRoles(app.allowedRoles || ['SUPER_ADMIN', 'ADMIN', 'USER']);
+    // Normalize any legacy USER role to GURU
+    const normalizedRoles = (app.allowedRoles || ['SUPER_ADMIN', 'ADMIN', 'GURU', 'SISWA']).map((r: any) =>
+      r === 'USER' ? 'GURU' : r
+    ) as UserRole[];
+    setFormAllowedRoles(normalizedRoles);
     setFormIsActive(app.isActive);
     setError(null);
     setIsModalOpen(true);
@@ -619,8 +623,8 @@ export const ApplicationManager: React.FC<ApplicationManagerProps> = ({
                 <label className="block text-slate-700 font-bold mb-1.5">
                   Hak Akses Peran yang Diizinkan:
                 </label>
-                <div className="grid grid-cols-3 gap-2">
-                  {(['SUPER_ADMIN', 'ADMIN', 'USER'] as UserRole[]).map((role) => {
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {(['SUPER_ADMIN', 'ADMIN', 'GURU', 'SISWA'] as UserRole[]).map((role) => {
                     const isChecked = formAllowedRoles.includes(role);
                     return (
                       <button

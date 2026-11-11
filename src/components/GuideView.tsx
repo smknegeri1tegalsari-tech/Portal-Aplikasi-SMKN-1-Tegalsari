@@ -108,11 +108,21 @@ export const GuideView: React.FC = () => {
 
           <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
             <span className="text-[10px] font-extrabold px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-300">
-              USER
+              GURU
             </span>
-            <p className="text-slate-900 mt-2 font-bold">Guru & Peserta Didik</p>
+            <p className="text-slate-900 mt-2 font-bold">Tenaga Pendidik / Guru</p>
             <p className="text-[11px] text-slate-600 mt-1 leading-relaxed">
-              Dapat membuka aplikasi internal yang telah diberi izin hak akses. Tidak memiliki wewenang untuk membuka menu administrasi.
+              Dapat membuka aplikasi akademik, sistem penilaian, presensi guru, dan aplikasi pembelajaran sesuai hak akses.
+            </p>
+          </div>
+
+          <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+            <span className="text-[10px] font-extrabold px-2 py-0.5 rounded bg-sky-50 text-sky-800 border border-sky-300">
+              SISWA
+            </span>
+            <p className="text-slate-900 mt-2 font-bold">Siswa / Peserta Didik</p>
+            <p className="text-[11px] text-slate-600 mt-1 leading-relaxed">
+              Dapat membuka aplikasi CBT ujian online, e-learning siswa, perpustakaan digital, dan materi pembelajaran yang diizinkan.
             </p>
           </div>
         </div>

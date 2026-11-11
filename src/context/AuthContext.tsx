@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { User } from '../types';
+import { User, UserRole } from '../types';
 import { auth, testConnection } from '../lib/firebase';
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import {
@@ -20,6 +20,8 @@ interface AuthContextType {
   logout: () => Promise<void>;
   isSuperAdmin: boolean;
   isAdmin: boolean;
+  isGuru: boolean;
+  isSiswa: boolean;
   isUser: boolean;
   refreshUser: () => Promise<void>;
 }
@@ -231,13 +233,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       // Local Google session fallback
+      let googleRole: UserRole = 'GURU';
+      const cleanEmail = (firebaseUser.email || '').toLowerCase();
+      if (cleanEmail.includes('admin') || cleanEmail === 'smknegeri1tegalsari@gmail.com') {
+        googleRole = 'SUPER_ADMIN';
+      } else if (cleanEmail.includes('siswa')) {
+        googleRole = 'SISWA';
+      } else {
+        googleRole = 'GURU';
+      }
+
       const googleUser: User = {
         id: 'google-' + (firebaseUser.uid || Date.now().toString(36)),
         username: firebaseUser.email.split('@')[0],
         email: firebaseUser.email,
         fullName: firebaseUser.displayName || firebaseUser.email,
-        role: firebaseUser.email.toLowerCase().includes('admin') || firebaseUser.email.toLowerCase() === 'smknegeri1tegalsari@gmail.com' ? 'SUPER_ADMIN' : 'USER',
-        department: 'Akun Google Sekolah',
+        role: googleRole,
+        department: googleRole === 'SISWA' ? 'Siswa SMKN 1 Tegalsari' : 'Tenaga Pendidik / Guru',
         isActive: true,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -309,7 +321,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const isSuperAdmin = currentUser?.role === 'SUPER_ADMIN';
   const isAdmin = currentUser?.role === 'ADMIN' || isSuperAdmin;
-  const isUser = currentUser?.role === 'USER';
+  const isGuru = currentUser?.role === 'GURU' || (currentUser?.role as any) === 'USER';
+  const isSiswa = currentUser?.role === 'SISWA';
+  const isUser = isGuru || isSiswa;
 
   return (
     <AuthContext.Provider
@@ -323,6 +337,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         logout,
         isSuperAdmin,
         isAdmin,
+        isGuru,
+        isSiswa,
         isUser,
         refreshUser,
       }}

@@ -56,7 +56,7 @@ export const UserManager: React.FC<UserManagerProps> = ({ applications }) => {
   const [formPassword, setFormPassword] = useState('');
   const [formEmail, setFormEmail] = useState('');
   const [formFullName, setFormFullName] = useState('');
-  const [formRole, setFormRole] = useState<UserRole>('USER');
+  const [formRole, setFormRole] = useState<UserRole>('GURU');
   const [formDepartment, setFormDepartment] = useState('');
   const [formAllowedAppIds, setFormAllowedAppIds] = useState<string[]>([]);
   const [formIsActive, setFormIsActive] = useState(true);
@@ -114,7 +114,7 @@ export const UserManager: React.FC<UserManagerProps> = ({ applications }) => {
     setFormPassword('');
     setFormEmail('');
     setFormFullName('');
-    setFormRole('USER');
+    setFormRole('GURU');
     setFormDepartment('Guru / Tenaga Pendidik');
     setFormAllowedAppIds([]);
     setFormIsActive(true);
@@ -128,7 +128,7 @@ export const UserManager: React.FC<UserManagerProps> = ({ applications }) => {
     setFormPassword('');
     setFormEmail(u.email);
     setFormFullName(u.fullName);
-    setFormRole(u.role);
+    setFormRole((u.role as any) === 'USER' ? 'GURU' : u.role);
     setFormDepartment(u.department || '');
     setFormAllowedAppIds(u.allowedAppIds || []);
     setFormIsActive(u.isActive);
@@ -362,7 +362,8 @@ export const UserManager: React.FC<UserManagerProps> = ({ applications }) => {
           <option value="all">Semua Peran (Roles)</option>
           <option value="SUPER_ADMIN">SUPER ADMIN</option>
           <option value="ADMIN">ADMIN</option>
-          <option value="USER">USER</option>
+          <option value="GURU">GURU (Tenaga Pendidik)</option>
+          <option value="SISWA">SISWA (Peserta Didik)</option>
         </select>
       </div>
 
@@ -418,6 +419,8 @@ export const UserManager: React.FC<UserManagerProps> = ({ applications }) => {
                               ? 'bg-amber-50 text-amber-800 border-amber-300'
                               : u.role === 'ADMIN'
                               ? 'bg-teal-50 text-teal-800 border-teal-300'
+                              : u.role === 'SISWA'
+                              ? 'bg-sky-50 text-sky-800 border-sky-300'
                               : 'bg-emerald-50 text-emerald-800 border-emerald-300'
                           }`}
                         >
@@ -664,10 +667,23 @@ export const UserManager: React.FC<UserManagerProps> = ({ applications }) => {
                   <label className="block text-slate-700 font-bold mb-1">Peran (Role) *</label>
                   <select
                     value={formRole}
-                    onChange={(e) => setFormRole(e.target.value as UserRole)}
+                    onChange={(e) => {
+                      const newRole = e.target.value as UserRole;
+                      setFormRole(newRole);
+                      if (!editingUser) {
+                        if (newRole === 'SISWA') {
+                          setFormDepartment('Siswa / Peserta Didik');
+                        } else if (newRole === 'GURU') {
+                          setFormDepartment('Guru / Tenaga Pendidik');
+                        } else if (newRole === 'ADMIN') {
+                          setFormDepartment('Administrator Portal');
+                        }
+                      }
+                    }}
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500 font-medium"
                   >
-                    <option value="USER">USER (Pengguna Biasa)</option>
+                    <option value="GURU">GURU (Tenaga Pendidik)</option>
+                    <option value="SISWA">SISWA (Peserta Didik)</option>
                     <option value="ADMIN">ADMIN (Pengelola Aplikasi)</option>
                     {isSuperAdmin && <option value="SUPER_ADMIN">SUPER ADMIN (Semua Fitur)</option>}
                   </select>

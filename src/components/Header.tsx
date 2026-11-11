@@ -64,8 +64,14 @@ export const Header: React.FC<HeaderProps> = ({
         style: 'bg-teal-50 text-teal-800 border-teal-300 font-bold',
       };
     }
+    if (currentUser?.role === 'SISWA') {
+      return {
+        label: 'SISWA',
+        style: 'bg-sky-50 text-sky-800 border-sky-300 font-bold',
+      };
+    }
     return {
-      label: 'PENGGUNA / USER',
+      label: 'GURU',
       style: 'bg-emerald-50 text-emerald-800 border-emerald-300 font-bold',
     };
   };
