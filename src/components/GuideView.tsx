@@ -85,7 +85,7 @@ export const GuideView: React.FC = () => {
           <ShieldCheck className="w-4 h-4 text-emerald-600" />
           <span>Tingkatan Hak Akses Peran (Role-Based Access Control)</span>
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
           <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
             <span className="text-[10px] font-extrabold px-2 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-300">
               SUPER ADMIN
@@ -123,6 +123,16 @@ export const GuideView: React.FC = () => {
             <p className="text-slate-900 mt-2 font-bold">Siswa / Peserta Didik</p>
             <p className="text-[11px] text-slate-600 mt-1 leading-relaxed">
               Dapat membuka aplikasi CBT ujian online, e-learning siswa, perpustakaan digital, dan materi pembelajaran yang diizinkan.
+            </p>
+          </div>
+
+          <div className="p-3.5 rounded-xl bg-purple-50/70 border border-purple-200">
+            <span className="text-[10px] font-extrabold px-2 py-0.5 rounded bg-purple-100 text-purple-800 border border-purple-300">
+              UMUM (PUBLIK / TAMU)
+            </span>
+            <p className="text-slate-900 mt-2 font-bold">Akses Tanpa Login / Bebas</p>
+            <p className="text-[11px] text-slate-600 mt-1 leading-relaxed">
+              Masyarakat dan pengunjung dapat langsung membuka aplikasi yang dipilih untuk publik tanpa perlu memasukkan username dan kata sandi.
             </p>
           </div>
         </div>

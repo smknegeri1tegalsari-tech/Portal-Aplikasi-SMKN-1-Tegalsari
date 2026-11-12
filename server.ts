@@ -141,6 +141,24 @@ function ensureDefaultUsers() {
     siswa.role = 'SISWA';
     saveDb();
   }
+
+  // Ensure pengguna.umum exists
+  let umum = dbState.users.find((u) => u.username.toLowerCase() === 'pengguna.umum');
+  if (!umum) {
+    dbState.users.push({
+      id: 'user-umum',
+      username: 'pengguna.umum',
+      email: 'umum@smkn1tegalsari.sch.id',
+      fullName: 'Pengguna Umum (Tamu)',
+      role: 'UMUM',
+      department: 'Masyarakat & Publik',
+      isActive: true,
+      passwordHash: hashPassword('umum'),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+    saveDb();
+  }
 }
 
 async function syncFromCloudFirestore() {
@@ -382,13 +400,21 @@ function authenticateToken(req: Request, res: Response, next: NextFunction): voi
 
   // Support local session tokens issued by resilient client-side auth
   if (!session && (token.startsWith('local_session_') || token.startsWith('portal_token_') || token.startsWith('google_local_'))) {
-    const adminUser =
-      dbState.users.find((u) => u.role === 'SUPER_ADMIN') ||
-      dbState.users.find((u) => u.role === 'ADMIN') ||
-      dbState.users[0];
-    if (adminUser) {
-      session = { userId: adminUser.id, expiresAt: Date.now() + 30 * 24 * 60 * 60 * 1000 };
-      activeSessions.set(token, session);
+    if (token.startsWith('local_session_umum_')) {
+      const umumUser = dbState.users.find((u) => u.role === 'UMUM') || dbState.users[0];
+      if (umumUser) {
+        session = { userId: umumUser.id, expiresAt: Date.now() + 30 * 24 * 60 * 60 * 1000 };
+        activeSessions.set(token, session);
+      }
+    } else {
+      const adminUser =
+        dbState.users.find((u) => u.role === 'SUPER_ADMIN') ||
+        dbState.users.find((u) => u.role === 'ADMIN') ||
+        dbState.users[0];
+      if (adminUser) {
+        session = { userId: adminUser.id, expiresAt: Date.now() + 30 * 24 * 60 * 60 * 1000 };
+        activeSessions.set(token, session);
+      }
     }
   }
 
@@ -754,9 +780,8 @@ async function startServer() {
     res.json({ success: true, applications: dbState.applications });
   });
 
-  // POST /api/applications/:id/open - SECURE APP LAUNCH VERIFICATION
-  app.post('/api/applications/:id/open', authenticateToken, (req: Request, res: Response) => {
-    const user = (req as any).user as User;
+  // POST /api/applications/:id/open - SECURE APP LAUNCH VERIFICATION (Supports Public UMUM role without password)
+  app.post('/api/applications/:id/open', (req: Request, res: Response) => {
     const appId = req.params.id;
 
     const application = dbState.applications.find((a) => a.id === appId);
@@ -765,8 +790,67 @@ async function startServer() {
       return;
     }
 
-    if (!application.isActive && user.role !== 'SUPER_ADMIN') {
+    const isPublicApp = application.allowedRoles.includes('UMUM');
+
+    // Extract user if auth header is present
+    let user: User | null = null;
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.split(' ')[1];
+      let session = activeSessions.get(token);
+
+      if (!session && token.startsWith('local_session_umum_')) {
+        const umumUser = dbState.users.find((u) => u.role === 'UMUM') || dbState.users[0];
+        if (umumUser) user = umumUser;
+      } else if (!session && (token.startsWith('local_session_') || token.startsWith('portal_token_') || token.startsWith('google_local_'))) {
+        const adminUser =
+          dbState.users.find((u) => u.role === 'SUPER_ADMIN') ||
+          dbState.users.find((u) => u.role === 'ADMIN') ||
+          dbState.users[0];
+        if (adminUser) user = adminUser;
+      } else if (session && session.expiresAt >= Date.now()) {
+        const found = dbState.users.find((u) => u.id === session.userId);
+        if (found && found.isActive) user = found;
+      }
+    }
+
+    if (!application.isActive && (!user || user.role !== 'SUPER_ADMIN')) {
       res.status(403).json({ error: 'Aplikasi sedang dalam pemeliharaan atau dinonaktifkan oleh administrator' });
+      return;
+    }
+
+    // Direct access for applications with role UMUM without requiring login credentials
+    if (isPublicApp) {
+      application.openCount = (application.openCount || 0) + 1;
+      saveDb();
+
+      recordLog(
+        user ? user.id : 'guest-umum',
+        user ? user.username : 'pengguna.umum',
+        user ? user.role : 'UMUM',
+        'OPEN_APP',
+        `Membuka aplikasi publik ${application.name} (Peran UMUM tanpa login)`,
+        application.id,
+        application.name,
+        req
+      );
+
+      res.json({
+        success: true,
+        message: 'Hak akses UMUM diverifikasi (Akses Publik)',
+        targetUrl: application.targetUrl,
+        application: {
+          id: application.id,
+          name: application.name,
+          openCount: application.openCount,
+        },
+      });
+      return;
+    }
+
+    // For non-public applications, user must be authenticated
+    if (!user) {
+      res.status(401).json({ error: 'Aplikasi ini memerlukan autentikasi login akun sekolah' });
       return;
     }
 

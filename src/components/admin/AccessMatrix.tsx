@@ -11,7 +11,7 @@ interface AccessMatrixProps {
   onRefresh: () => void;
 }
 
-const ROLES: UserRole[] = ['SUPER_ADMIN', 'ADMIN', 'GURU', 'SISWA'];
+const ROLES: UserRole[] = ['SUPER_ADMIN', 'ADMIN', 'GURU', 'SISWA', 'UMUM'];
 
 export const AccessMatrix: React.FC<AccessMatrixProps> = ({
   applications,
@@ -83,7 +83,7 @@ export const AccessMatrix: React.FC<AccessMatrixProps> = ({
         <div>
           <h2 className="text-xl font-black text-slate-900">Matriks Kebijakan Hak Akses Peran</h2>
           <p className="text-xs text-slate-500 mt-1">
-            Tentukan kewenangan akses aplikasi internal berdasarkan role (SUPER ADMIN, ADMIN, GURU, SISWA).
+            Tentukan kewenangan akses aplikasi internal berdasarkan role (SUPER ADMIN, ADMIN, GURU, SISWA, UMUM/Publik tanpa login).
           </p>
         </div>
         <button
@@ -121,11 +121,18 @@ export const AccessMatrix: React.FC<AccessMatrixProps> = ({
                           ? 'bg-teal-50 text-teal-800 border-teal-300'
                           : role === 'GURU'
                           ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
-                          : 'bg-sky-50 text-sky-800 border-sky-300'
+                          : role === 'SISWA'
+                          ? 'bg-sky-50 text-sky-800 border-sky-300'
+                          : 'bg-purple-50 text-purple-800 border-purple-300'
                       }`}
                     >
                       {role}
                     </span>
+                    {role === 'UMUM' && (
+                      <span className="block text-[8px] text-purple-600 font-medium normal-case tracking-normal">
+                        (Tanpa Login)
+                      </span>
+                    )}
                   </th>
                 ))}
               </tr>

@@ -8,6 +8,7 @@ import {
   setStoredUserSession,
   clearStoredUserSession,
   addOrUpdateClientUser,
+  createGuestUmumSession,
 } from '../lib/clientAuth';
 
 interface AuthContextType {
@@ -17,11 +18,13 @@ interface AuthContextType {
   error: string | null;
   login: (username: string, password: string) => Promise<{ success: boolean; error?: string }>;
   loginWithGoogle: () => Promise<boolean>;
+  loginAsUmum: () => void;
   logout: () => Promise<void>;
   isSuperAdmin: boolean;
   isAdmin: boolean;
   isGuru: boolean;
   isSiswa: boolean;
+  isUmum: boolean;
   isUser: boolean;
   refreshUser: () => Promise<void>;
 }
@@ -275,6 +278,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const loginAsUmum = () => {
+    setIsLoading(true);
+    setError(null);
+    const { user, token: guestToken } = createGuestUmumSession();
+    setCurrentUser(user);
+    setToken(guestToken);
+    setIsLoading(false);
+  };
+
   const logout = async () => {
     try {
       if (token && !token.startsWith('local_session_')) {
@@ -323,7 +335,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const isAdmin = currentUser?.role === 'ADMIN' || isSuperAdmin;
   const isGuru = currentUser?.role === 'GURU' || (currentUser?.role as any) === 'USER';
   const isSiswa = currentUser?.role === 'SISWA';
-  const isUser = isGuru || isSiswa;
+  const isUmum = currentUser?.role === 'UMUM';
+  const isUser = isGuru || isSiswa || isUmum;
 
   return (
     <AuthContext.Provider
@@ -334,11 +347,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         error,
         login,
         loginWithGoogle,
+        loginAsUmum,
         logout,
         isSuperAdmin,
         isAdmin,
         isGuru,
         isSiswa,
+        isUmum,
         isUser,
         refreshUser,
       }}

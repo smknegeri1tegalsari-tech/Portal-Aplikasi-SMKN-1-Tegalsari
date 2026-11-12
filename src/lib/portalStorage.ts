@@ -72,7 +72,7 @@ export function addOrUpdateLocalApplication(appData: Partial<Application> & { na
       categoryId: appData.categoryId,
       iconName: appData.iconName || 'Laptop',
       targetUrl: appData.targetUrl,
-      allowedRoles: (appData.allowedRoles || ['SUPER_ADMIN', 'ADMIN', 'GURU', 'SISWA']).map((r: any) => (r === 'USER' ? 'GURU' : r)),
+      allowedRoles: (appData.allowedRoles || ['SUPER_ADMIN', 'ADMIN', 'GURU', 'SISWA', 'UMUM']).map((r: any) => (r === 'USER' ? 'GURU' : r)),
       isActive: appData.isActive !== false,
       sortOrder: apps.length + 1,
       openCount: 0,

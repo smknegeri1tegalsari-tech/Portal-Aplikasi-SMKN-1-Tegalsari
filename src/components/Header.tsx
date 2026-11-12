@@ -70,6 +70,12 @@ export const Header: React.FC<HeaderProps> = ({
         style: 'bg-sky-50 text-sky-800 border-sky-300 font-bold',
       };
     }
+    if (currentUser?.role === 'UMUM') {
+      return {
+        label: 'UMUM / PUBLIK',
+        style: 'bg-purple-50 text-purple-800 border-purple-300 font-bold',
+      };
+    }
     return {
       label: 'GURU',
       style: 'bg-emerald-50 text-emerald-800 border-emerald-300 font-bold',

@@ -249,6 +249,24 @@ export async function authenticateLocally(
   };
 }
 
+// Instant 1-click login for Public / Guest Role (UMUM) without password
+export function createGuestUmumSession(): { user: User; token: string } {
+  const umumUser: User = {
+    id: 'user-umum-tamu',
+    username: 'tamu.umum',
+    email: 'umum@smkn1tegalsari.sch.id',
+    fullName: 'Pengguna Umum (Tamu)',
+    role: 'UMUM',
+    department: 'Masyarakat & Publik',
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+  const token = 'local_session_umum_' + Date.now().toString(36);
+  setStoredUserSession(umumUser, token);
+  return { user: umumUser, token };
+}
+
 // User management helpers for client-side persistence
 export async function addOrUpdateClientUser(
   userData: Partial<User> & { password?: string }

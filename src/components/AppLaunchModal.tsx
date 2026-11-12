@@ -43,11 +43,18 @@ export const AppLaunchModal: React.FC<AppLaunchModalProps> = ({
     setTargetUrl('');
 
     // Local permission check first
+    const isPublicApp = app.allowedRoles.includes('UMUM');
     const isManager = currentUser?.role === 'SUPER_ADMIN' || currentUser?.role === 'ADMIN';
-    const roleAllowed = currentUser ? app.allowedRoles.includes(currentUser.role) : false;
+    const roleAllowed = currentUser ? app.allowedRoles.includes(currentUser.role) : isPublicApp;
     const explicitAllowed = currentUser?.allowedAppIds ? currentUser.allowedAppIds.includes(app.id) : false;
 
-    if (!isManager && !roleAllowed && !explicitAllowed) {
+    if (!isPublicApp && !currentUser) {
+      setStatus('denied');
+      setErrorMessage('Aplikasi ini memerlukan autentikasi login.');
+      return;
+    }
+
+    if (!isManager && !roleAllowed && !explicitAllowed && !isPublicApp) {
       setStatus('denied');
       setErrorMessage('Akses ditolak: Akun Anda tidak memiliki izin untuk membuka aplikasi ini.');
       return;
@@ -62,25 +69,25 @@ export const AppLaunchModal: React.FC<AppLaunchModalProps> = ({
     // Trigger server-side validation and logging, with automatic local fallback
     const verifyAndOpen = async () => {
       try {
+        const headers: Record<string, string> = { 'Content-Type': 'application/json' };
         if (token && !token.startsWith('local_session_')) {
-          const res = await fetch(`/api/applications/${app.id}/open`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`,
-            },
-          });
+          headers['Authorization'] = `Bearer ${token}`;
+        }
 
-          const contentType = res.headers.get('content-type') || '';
-          if (res.ok && contentType.includes('application/json')) {
-            const data = await res.json();
-            if (data.success) {
-              setStatus('granted');
-              setTargetUrl(data.targetUrl || app.targetUrl);
-              incrementAppOpenCount(app.id);
-              if (onAppOpened) onAppOpened();
-              return;
-            }
+        const res = await fetch(`/api/applications/${app.id}/open`, {
+          method: 'POST',
+          headers,
+        });
+
+        const contentType = res.headers.get('content-type') || '';
+        if (res.ok && contentType.includes('application/json')) {
+          const data = await res.json();
+          if (data.success) {
+            setStatus('granted');
+            setTargetUrl(data.targetUrl || app.targetUrl);
+            incrementAppOpenCount(app.id);
+            if (onAppOpened) onAppOpened();
+            return;
           }
         }
       } catch (err) {
@@ -98,6 +105,16 @@ export const AppLaunchModal: React.FC<AppLaunchModalProps> = ({
           role: currentUser.role,
           action: 'OPEN_APP',
           details: `Membuka aplikasi ${app.name}`,
+          targetAppId: app.id,
+          targetAppName: app.name,
+        });
+      } else if (isPublicApp) {
+        addLocalLog({
+          userId: 'guest-umum',
+          username: 'pengguna.umum',
+          role: 'UMUM',
+          action: 'OPEN_APP',
+          details: `Membuka aplikasi publik ${app.name} tanpa kredensial login`,
           targetAppId: app.id,
           targetAppName: app.name,
         });
@@ -169,9 +186,13 @@ export const AppLaunchModal: React.FC<AppLaunchModalProps> = ({
             <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 text-center space-y-3">
               <div className="w-10 h-10 border-3 border-emerald-500/30 border-t-emerald-600 rounded-full animate-spin mx-auto" />
               <div>
-                <p className="text-sm font-bold text-slate-900">Memverifikasi Hak Akses Sistem...</p>
+                <p className="text-sm font-bold text-slate-900">
+                  {app.allowedRoles.includes('UMUM') && !currentUser ? 'Menyiapkan Akses Publik...' : 'Memverifikasi Hak Akses Sistem...'}
+                </p>
                 <p className="text-xs text-slate-500 mt-1">
-                  Server memeriksa kredensial pengguna @{currentUser?.username} ({currentUser?.role})
+                  {app.allowedRoles.includes('UMUM') && !currentUser
+                    ? 'Aplikasi terbuka untuk Pengguna Umum tanpa perlu login kredensial.'
+                    : `Server memeriksa kredensial pengguna @${currentUser?.username} (${currentUser?.role})`}
                 </p>
               </div>
             </div>
@@ -184,10 +205,12 @@ export const AppLaunchModal: React.FC<AppLaunchModalProps> = ({
                 <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
                 <div>
                   <h4 className="text-xs font-bold text-emerald-900">
-                    Otorisasi Berhasil Diverifikasi
+                    {app.allowedRoles.includes('UMUM') && !currentUser ? 'Akses Publik Terbuka (Tanpa Login)' : 'Otorisasi Berhasil Diverifikasi'}
                   </h4>
                   <p className="text-xs text-emerald-700 mt-0.5">
-                    Aktivitas pembukaan aplikasi telah tercatat dalam audit log server sekolah.
+                    {app.allowedRoles.includes('UMUM') && !currentUser
+                      ? 'Aplikasi ini terbuka bagi masyarakat dan pengguna umum tanpa kata sandi.'
+                      : 'Aktivitas pembukaan aplikasi telah tercatat dalam audit log server sekolah.'}
                   </p>
                 </div>
               </div>

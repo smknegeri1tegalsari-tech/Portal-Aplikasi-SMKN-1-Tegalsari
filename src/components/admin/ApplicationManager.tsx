@@ -418,7 +418,11 @@ export const ApplicationManager: React.FC<ApplicationManagerProps> = ({
                                 r === 'SUPER_ADMIN'
                                   ? 'bg-amber-50 text-amber-800 border-amber-300'
                                   : r === 'ADMIN'
-                                  ? 'bg-blue-50 text-blue-800 border-blue-300'
+                                  ? 'bg-teal-50 text-teal-800 border-teal-300'
+                                  : r === 'SISWA'
+                                  ? 'bg-sky-50 text-sky-800 border-sky-300'
+                                  : r === 'UMUM'
+                                  ? 'bg-purple-50 text-purple-800 border-purple-300'
                                   : 'bg-emerald-50 text-emerald-800 border-emerald-300'
                               }`}
                             >
@@ -623,8 +627,8 @@ export const ApplicationManager: React.FC<ApplicationManagerProps> = ({
                 <label className="block text-slate-700 font-bold mb-1.5">
                   Hak Akses Peran yang Diizinkan:
                 </label>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  {(['SUPER_ADMIN', 'ADMIN', 'GURU', 'SISWA'] as UserRole[]).map((role) => {
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
+                  {(['SUPER_ADMIN', 'ADMIN', 'GURU', 'SISWA', 'UMUM'] as UserRole[]).map((role) => {
                     const isChecked = formAllowedRoles.includes(role);
                     return (
                       <button
@@ -633,12 +637,21 @@ export const ApplicationManager: React.FC<ApplicationManagerProps> = ({
                         onClick={() => handleToggleRole(role)}
                         className={`p-2.5 rounded-xl border text-left flex items-center justify-between transition-colors cursor-pointer ${
                           isChecked
-                            ? 'bg-emerald-50 border-emerald-500 text-emerald-900 font-bold'
+                            ? role === 'UMUM'
+                              ? 'bg-purple-50 border-purple-500 text-purple-900 font-bold'
+                              : 'bg-emerald-50 border-emerald-500 text-emerald-900 font-bold'
                             : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-white'
                         }`}
                       >
-                        <span className="text-[11px]">{role}</span>
-                        {isChecked && <Check className="w-3.5 h-3.5 text-emerald-600" />}
+                        <div className="flex flex-col">
+                          <span className="text-[11px]">{role}</span>
+                          {role === 'UMUM' && (
+                            <span className="text-[9px] text-purple-600 font-semibold leading-tight">Tanpa Login</span>
+                          )}
+                        </div>
+                        {isChecked && (
+                          <Check className={`w-3.5 h-3.5 ${role === 'UMUM' ? 'text-purple-600' : 'text-emerald-600'}`} />
+                        )}
                       </button>
                     );
                   })}

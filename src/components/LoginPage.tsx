@@ -9,6 +9,7 @@ import {
   ShieldCheck,
   Building,
   ArrowLeft,
+  Users,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { OfficialLogo } from './OfficialLogo';
@@ -26,7 +27,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
   onCancel,
   onSuccess,
 }) => {
-  const { login, isLoading, error: authError } = useAuth();
+  const { login, loginAsUmum, isLoading, error: authError } = useAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -214,6 +215,26 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                 )}
               </button>
 
+              {/* Divider */}
+              <div className="relative my-3 flex items-center justify-center">
+                <div className="border-t border-slate-200 w-full" />
+                <span className="bg-white px-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider absolute">
+                  atau
+                </span>
+              </div>
+
+              {/* Instant Login as Pengguna Umum (Tamu) */}
+              <button
+                type="button"
+                onClick={() => {
+                  loginAsUmum();
+                  if (onSuccess) onSuccess();
+                }}
+                className="w-full py-2.5 px-4 bg-purple-50 hover:bg-purple-100 text-purple-900 border border-purple-200 font-bold rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer text-xs shadow-xs"
+              >
+                <Users className="w-4 h-4 text-purple-600" />
+                <span>Masuk sebagai Pengguna Umum / Tamu (Tanpa Password)</span>
+              </button>
             </form>
 
             {/* School Helpdesk note */}

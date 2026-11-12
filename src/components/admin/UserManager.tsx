@@ -364,6 +364,7 @@ export const UserManager: React.FC<UserManagerProps> = ({ applications }) => {
           <option value="ADMIN">ADMIN</option>
           <option value="GURU">GURU (Tenaga Pendidik)</option>
           <option value="SISWA">SISWA (Peserta Didik)</option>
+          <option value="UMUM">UMUM (Publik / Tamu)</option>
         </select>
       </div>
 
@@ -403,7 +404,7 @@ export const UserManager: React.FC<UserManagerProps> = ({ applications }) => {
                               <span>{u.fullName}</span>
                               {isCurrent && (
                                 <span className="text-[9px] px-1.5 py-0.2 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 font-medium">
-                                  Anda
+                                   Anda
                                 </span>
                               )}
                             </div>
@@ -421,6 +422,8 @@ export const UserManager: React.FC<UserManagerProps> = ({ applications }) => {
                               ? 'bg-teal-50 text-teal-800 border-teal-300'
                               : u.role === 'SISWA'
                               ? 'bg-sky-50 text-sky-800 border-sky-300'
+                              : u.role === 'UMUM'
+                              ? 'bg-purple-50 text-purple-800 border-purple-300'
                               : 'bg-emerald-50 text-emerald-800 border-emerald-300'
                           }`}
                         >
@@ -675,6 +678,8 @@ export const UserManager: React.FC<UserManagerProps> = ({ applications }) => {
                           setFormDepartment('Siswa / Peserta Didik');
                         } else if (newRole === 'GURU') {
                           setFormDepartment('Guru / Tenaga Pendidik');
+                        } else if (newRole === 'UMUM') {
+                          setFormDepartment('Masyarakat & Publik');
                         } else if (newRole === 'ADMIN') {
                           setFormDepartment('Administrator Portal');
                         }
@@ -684,6 +689,7 @@ export const UserManager: React.FC<UserManagerProps> = ({ applications }) => {
                   >
                     <option value="GURU">GURU (Tenaga Pendidik)</option>
                     <option value="SISWA">SISWA (Peserta Didik)</option>
+                    <option value="UMUM">UMUM (Pengguna Umum / Publik)</option>
                     <option value="ADMIN">ADMIN (Pengelola Aplikasi)</option>
                     {isSuperAdmin && <option value="SUPER_ADMIN">SUPER ADMIN (Semua Fitur)</option>}
                   </select>

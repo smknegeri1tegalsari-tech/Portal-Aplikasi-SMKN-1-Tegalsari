@@ -68,10 +68,11 @@ export const AppCard: React.FC<AppCardProps> = ({
   const [isHovered, setIsHovered] = useState(false);
 
   // Check if current user has permission to open this app
+  const isPublicApp = app.allowedRoles.includes('UMUM');
   const isManager = currentUser?.role === 'ADMIN' || currentUser?.role === 'SUPER_ADMIN';
-  const roleAllowed = currentUser ? app.allowedRoles.includes(currentUser.role) : false;
+  const roleAllowed = currentUser ? app.allowedRoles.includes(currentUser.role) : isPublicApp;
   const userExplicitlyAllowed = currentUser?.allowedAppIds ? currentUser.allowedAppIds.includes(app.id) : false;
-  const hasAccess = isManager || roleAllowed || userExplicitlyAllowed;
+  const hasAccess = isManager || roleAllowed || userExplicitlyAllowed || isPublicApp;
 
   // Visual theme colors based on category
   const getCategoryColor = () => {
@@ -174,6 +175,10 @@ export const AppCard: React.FC<AppCardProps> = ({
           {!app.isActive ? (
             <span className="flex items-center gap-1 text-red-600 font-semibold">
               <AlertTriangle className="w-3 h-3" /> Pemeliharaan
+            </span>
+          ) : isPublicApp ? (
+            <span className="flex items-center gap-1 text-purple-700 font-semibold bg-purple-50 px-2 py-0.5 rounded-full border border-purple-200">
+              <CheckCircle className="w-3 h-3" /> Akses Umum (Tanpa Login)
             </span>
           ) : !currentUser ? (
             <span className="flex items-center gap-1 text-emerald-700 font-semibold">

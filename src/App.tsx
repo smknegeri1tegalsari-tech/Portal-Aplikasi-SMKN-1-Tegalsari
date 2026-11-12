@@ -249,8 +249,15 @@ function PortalAppContent() {
 
   // Launch handler
   const handleOpenApp = (app: Application) => {
+    // If app has role UMUM, allow direct opening without login credentials
+    if (!currentUser && app.allowedRoles.includes('UMUM')) {
+      setSelectedAppToOpen(app);
+      setIsLaunchModalOpen(true);
+      return;
+    }
+
     if (!currentUser) {
-      // User is not logged in: redirect to login page for this specific app
+      // User is not logged in and application requires role authentication: redirect to login
       setPendingAppToOpen(app);
       setShowLoginView(true);
     } else {
