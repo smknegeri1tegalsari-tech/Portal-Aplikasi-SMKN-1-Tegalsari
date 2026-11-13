@@ -42,6 +42,8 @@ import {
   saveLocalCategories,
   getLocalSettings,
   saveLocalSettings,
+  incrementAppOpenCount,
+  addLocalLog,
 } from './lib/portalStorage';
 import {
   fetchCloudApplications,
@@ -49,6 +51,8 @@ import {
   fetchCloudSettings,
   subscribeCloudApplications,
   subscribeCloudCategories,
+  syncCloudApplication,
+  recordCloudAccessLog,
 } from './lib/firestoreSync';
 
 const FAVORITES_STORAGE_KEY = 'portal_smkn1_fav_apps';
@@ -249,10 +253,33 @@ function PortalAppContent() {
 
   // Launch handler
   const handleOpenApp = (app: Application) => {
-    // If app has role UMUM, allow direct opening without login credentials
-    if (!currentUser && app.allowedRoles.includes('UMUM')) {
-      setSelectedAppToOpen(app);
-      setIsLaunchModalOpen(true);
+    // If app has role UMUM and user is visitor/UMUM, record open count & audit log in background while <a> opens targetUrl directly
+    if (app.allowedRoles.includes('UMUM') && (!currentUser || currentUser.role === 'UMUM')) {
+      const nextCount = (app.openCount || 0) + 1;
+      setApplications((prev) =>
+        prev.map((a) => (a.id === app.id ? { ...a, openCount: nextCount } : a))
+      );
+      incrementAppOpenCount(app.id);
+      addLocalLog({
+        userId: currentUser?.id || 'guest-umum',
+        username: currentUser?.username || 'pengguna.umum',
+        role: 'UMUM',
+        action: 'OPEN_APP',
+        details: `Membuka langsung aplikasi publik ${app.name} (Tanpa Login)`,
+        targetAppId: app.id,
+        targetAppName: app.name,
+      });
+      syncCloudApplication({ ...app, openCount: nextCount, updatedAt: new Date().toISOString() }).catch(() => {});
+      recordCloudAccessLog({
+        userId: currentUser?.id || 'guest-umum',
+        username: currentUser?.username || 'pengguna.umum',
+        role: 'UMUM',
+        action: 'OPEN_APP',
+        details: `Membuka langsung aplikasi publik ${app.name} (Tanpa Login)`,
+        targetAppId: app.id,
+        targetAppName: app.name,
+      }).catch(() => {});
+      fetch(`/api/applications/${app.id}/open`, { method: 'POST' }).catch(() => {});
       return;
     }
 
@@ -277,7 +304,9 @@ function PortalAppContent() {
     if (!app.isActive && !isManager) return false;
     if (isManager) return true;
 
-    const roleAllowed = currentUser ? app.allowedRoles.includes(currentUser.role) : false;
+    const roleAllowed = currentUser
+      ? app.allowedRoles.includes(currentUser.role) || app.allowedRoles.includes('UMUM')
+      : app.allowedRoles.includes('UMUM');
     const explicitlyAllowed = currentUser?.allowedAppIds ? currentUser.allowedAppIds.includes(app.id) : false;
     return roleAllowed || explicitlyAllowed;
   });
@@ -412,7 +441,7 @@ function PortalAppContent() {
                 Aplikasi dan Layanan Sekolah
               </h1>
               <p className="text-xs sm:text-sm text-emerald-100/90 mt-2 leading-relaxed">
-                Seluruh aplikasi internal SMKN 1 Tegalsari terintegrasi di sini. Pilih aplikasi di bawah untuk membuka sistem—Anda akan diarahkan untuk login menggunakan akun resmi.
+                Seluruh aplikasi SMKN 1 Tegalsari terintegrasi di sini. Aplikasi bertanda <strong>Akses Umum</strong> dapat langsung dibuka tanpa login, sedangkan aplikasi internal sekolah memerlukan akun resmi.
               </p>
             </div>
 
@@ -555,6 +584,16 @@ function PortalAppContent() {
             {SCHOOL_INFO.address} | NPSN: {SCHOOL_INFO.npsn}
           </p>
         </footer>
+
+        {/* Public App Launch Modal (for UMUM / Tanpa Login apps) */}
+        <AppLaunchModal
+          app={selectedAppToOpen}
+          isOpen={isLaunchModalOpen}
+          onClose={() => setIsLaunchModalOpen(false)}
+          currentUser={null}
+          token={null}
+          onAppOpened={loadPortalData}
+        />
       </div>
     );
   }

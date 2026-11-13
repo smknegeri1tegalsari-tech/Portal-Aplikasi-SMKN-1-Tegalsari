@@ -764,6 +764,7 @@ async function startServer() {
 
         const roleAllowed =
           app.allowedRoles.includes(user!.role) ||
+          app.allowedRoles.includes('UMUM') ||
           (user!.role === 'GURU' && (app.allowedRoles as any).includes('USER')) ||
           (user!.role === 'SISWA' && (app.allowedRoles as any).includes('USER')) ||
           ((user!.role as any) === 'USER' && (app.allowedRoles.includes('GURU') || app.allowedRoles.includes('SISWA')));

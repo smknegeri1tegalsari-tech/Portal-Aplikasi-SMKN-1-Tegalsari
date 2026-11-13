@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ShieldCheck, Check, X, Save, AlertCircle, CheckCircle } from 'lucide-react';
 import { Application, UserRole } from '../../types';
 import { useAuth } from '../../context/AuthContext';
@@ -27,6 +27,14 @@ export const AccessMatrix: React.FC<AccessMatrixProps> = ({
   });
   const [isSaving, setIsSaving] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    const updated: { [appId: string]: UserRole[] } = {};
+    applications.forEach((a) => {
+      updated[a.id] = [...a.allowedRoles];
+    });
+    setMatrix(updated);
+  }, [applications]);
 
   const toggleAccess = (appId: string, role: UserRole) => {
     setMatrix((prev) => {
@@ -68,6 +76,7 @@ export const AccessMatrix: React.FC<AccessMatrixProps> = ({
       });
 
       await Promise.all(updatePromises);
+      onRefresh();
       setSuccessMessage('Matriks hak akses berhasil disimpan dan diverifikasi.');
       setTimeout(() => setSuccessMessage(null), 3000);
     } catch (err) {

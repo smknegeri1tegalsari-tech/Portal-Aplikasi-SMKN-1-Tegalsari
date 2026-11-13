@@ -69,110 +69,106 @@
   "applications": [
     {
       "id": "app-semakasari-cbt",
-      "createdAt": "2026-11-10T11:36:54.499Z",
-      "categoryId": "cat-1794205545810",
       "allowedRoles": [
         "SUPER_ADMIN",
         "ADMIN",
-        "SISWA",
-        "GURU"
+        "GURU",
+        "SISWA"
       ],
-      "isActive": true,
-      "name": "SEMAKASARI CBT & UJIAN ONLINE",
-      "targetUrl": "https://cbt.smkn1tegalsari.sch.id",
-      "badge": "CBT / Ujian",
-      "description": "Portal ujian berbasis komputer dan asesmen diagnostik siswa SMKN 1 Tegalsari",
       "openCount": 0,
+      "categoryId": "cat-1794205545810",
       "iconName": "Laptop",
-      "updatedAt": "2026-11-12T01:16:33.823Z",
-      "sortOrder": 1
+      "badge": "CBT / Ujian",
+      "isActive": true,
+      "sortOrder": 1,
+      "createdAt": "2026-11-10T11:36:54.499Z",
+      "updatedAt": "2026-11-12T07:55:30.212Z",
+      "description": "Portal ujian berbasis komputer dan asesmen diagnostik siswa SMKN 1 Tegalsari",
+      "name": "SEMAKASARI CBT & UJIAN ONLINE",
+      "targetUrl": "https://cbt.smkn1tegalsari.sch.id"
     },
     {
       "id": "app-1794312926074",
-      "iconName": "Briefcase",
+      "openCount": 0,
       "categoryId": "cat-1794205545810",
-      "updatedAt": "2026-11-12T01:16:33.825Z",
+      "description": "(Google Classroom, Moodle)",
       "badge": "LMS",
       "name": "E-LEARNING / LMS",
-      "description": "(Google Classroom, Moodle)",
-      "sortOrder": 2,
-      "isActive": true,
       "createdAt": "2026-11-10T12:15:26.074Z",
+      "sortOrder": 2,
+      "iconName": "Briefcase",
+      "updatedAt": "2026-11-12T07:55:30.213Z",
       "allowedRoles": [
         "SUPER_ADMIN",
         "ADMIN",
         "SISWA",
         "GURU"
       ],
-      "openCount": 0,
-      "targetUrl": "https://elearning.smkn1tegalsari.sch.id"
+      "targetUrl": "https://elearning.smkn1tegalsari.sch.id",
+      "isActive": true
     },
     {
       "id": "app-1794312990993",
-      "createdAt": "2026-11-10T12:16:30.993Z",
-      "categoryId": "cat-1794205545810",
-      "isActive": true,
-      "description": "Jurnal Mengajar Guru Server 1",
       "targetUrl": "https://simpati-semakasari.lovable.app/",
-      "openCount": 0,
+      "isActive": true,
+      "updatedAt": "2026-11-12T07:55:30.213Z",
+      "iconName": "Briefcase",
+      "sortOrder": 3,
+      "createdAt": "2026-11-10T12:16:30.993Z",
+      "description": "Jurnal Mengajar Guru Server 1",
+      "badge": "simpati",
       "allowedRoles": [
         "SUPER_ADMIN",
         "ADMIN",
         "GURU",
         "SISWA"
       ],
-      "badge": "simpati",
-      "updatedAt": "2026-11-12T01:16:33.825Z",
-      "name": "SIMPATI SERVER 1",
-      "sortOrder": 3,
-      "iconName": "Briefcase"
+      "openCount": 0,
+      "categoryId": "cat-1794205545810",
+      "name": "SIMPATI SERVER 1"
     },
     {
       "id": "app-1794313055830",
-      "sortOrder": 4,
-      "iconName": "Briefcase",
-      "badge": "simpati 2",
-      "updatedAt": "2026-11-12T01:16:33.825Z",
-      "categoryId": "cat-1794205545810",
-      "isActive": true,
+      "name": "SIMPATI SERVER 2",
       "openCount": 0,
-      "targetUrl": "https://simpati-smkn-1-tegalsari.vercel.app/",
       "allowedRoles": [
         "SUPER_ADMIN",
         "ADMIN",
         "GURU",
         "SISWA"
       ],
+      "description": "Jurnal Mengajar Server 2",
+      "badge": "simpati 2",
+      "sortOrder": 4,
       "createdAt": "2026-11-10T12:17:35.830Z",
-      "name": "SIMPATI SERVER 2",
-      "description": "Jurnal Mengajar Server 2"
+      "iconName": "Briefcase",
+      "isActive": true,
+      "targetUrl": "https://simpati-smkn-1-tegalsari.vercel.app/",
+      "categoryId": "cat-1794205545810",
+      "updatedAt": "2026-11-12T07:55:30.213Z"
     },
     {
       "id": "app-1794313123440",
-      "categoryId": "cat-1794205545810",
-      "description": "Sistem Penilaian Rapor (Kurikulum Merdeka / K-13)",
-      "updatedAt": "2026-11-12T01:16:33.825Z",
       "name": "ERAPOR 2026",
-      "sortOrder": 5,
-      "iconName": "BookOpen",
-      "createdAt": "2026-11-10T12:18:43.440Z",
       "allowedRoles": [
         "SUPER_ADMIN",
         "ADMIN",
         "GURU",
         "SISWA"
       ],
-      "isActive": true,
+      "description": "Sistem Penilaian Rapor (Kurikulum Merdeka / K-13)",
+      "sortOrder": 5,
+      "createdAt": "2026-11-10T12:18:43.440Z",
+      "badge": "erapor",
       "targetUrl": "https://erapor.smkn1tegalsari.sch.id",
+      "updatedAt": "2026-11-12T07:55:30.214Z",
+      "categoryId": "cat-1794205545810",
+      "isActive": true,
       "openCount": 0,
-      "badge": "erapor"
+      "iconName": "BookOpen"
     },
     {
       "id": "app-1794313339544",
-      "description": "website sekolah",
-      "createdAt": "2026-11-10T12:22:19.544Z",
-      "isActive": true,
-      "badge": "website",
       "allowedRoles": [
         "SUPER_ADMIN",
         "ADMIN",
@@ -181,19 +177,19 @@
         "UMUM"
       ],
       "openCount": 1,
+      "badge": "website",
+      "categoryId": "cat-1794299399575",
+      "updatedAt": "2026-11-12T07:55:30.214Z",
+      "isActive": true,
       "targetUrl": "https://smkn1tegalsari.sch.id",
-      "iconName": "ExternalLink",
-      "updatedAt": "2026-11-12T07:35:57.636Z",
       "name": "Website Resmi Sekolah & Portal Berita",
       "sortOrder": 6,
-      "categoryId": "cat-1794299399575"
+      "createdAt": "2026-11-10T12:22:19.544Z",
+      "iconName": "ExternalLink",
+      "description": "website sekolah"
     },
     {
       "id": "app-1794313382781",
-      "openCount": 0,
-      "targetUrl": "https://bukutamu.smkn1tegalsari.sch.id",
-      "name": "Sistem Buku Tamu Digital (Guest Book)",
-      "iconName": "Users",
       "allowedRoles": [
         "SUPER_ADMIN",
         "ADMIN",
@@ -201,26 +197,29 @@
         "SISWA",
         "UMUM"
       ],
+      "isActive": true,
+      "categoryId": "cat-1794299399575",
+      "openCount": 0,
+      "iconName": "Users",
+      "name": "Sistem Buku Tamu Digital (Guest Book)",
+      "targetUrl": "https://bukutamu.smkn1tegalsari.sch.id",
+      "updatedAt": "2026-11-12T07:55:30.214Z",
+      "description": "Buku Tamu Elektronik",
       "createdAt": "2026-11-10T12:23:02.781Z",
       "sortOrder": 7,
-      "description": "Buku Tamu Elektronik",
-      "isActive": true,
-      "badge": "buku tamu",
-      "updatedAt": "2026-11-12T07:35:57.734Z",
-      "categoryId": "cat-1794299399575"
+      "badge": "buku tamu"
     },
     {
       "id": "app-1794313457528",
-      "sortOrder": 8,
-      "badge": "tracer study",
-      "updatedAt": "2026-11-12T07:35:57.803Z",
-      "iconName": "Users",
-      "name": "Tracer Study (Database & Pelacakan Alumni) Nasional",
-      "openCount": 0,
-      "description": "Pelacakan Alumni versi Nasional",
-      "targetUrl": "https://tracervokasi.kemendikdasmen.go.id/login",
       "createdAt": "2026-11-10T12:24:17.528Z",
+      "sortOrder": 8,
+      "iconName": "Users",
+      "updatedAt": "2026-11-12T07:55:30.214Z",
       "categoryId": "cat-1794299399575",
+      "targetUrl": "https://tracervokasi.kemendikdasmen.go.id/login",
+      "name": "Tracer Study (Database & Pelacakan Alumni) Nasional",
+      "isActive": true,
+      "description": "Pelacakan Alumni versi Nasional",
       "allowedRoles": [
         "SUPER_ADMIN",
         "ADMIN",
@@ -228,16 +227,13 @@
         "GURU",
         "UMUM"
       ],
-      "isActive": true
+      "openCount": 0,
+      "badge": "tracer study"
     },
     {
       "id": "app-1794313547231",
-      "sortOrder": 9,
-      "isActive": true,
-      "badge": "spmb",
-      "updatedAt": "2026-11-12T07:35:57.869Z",
       "targetUrl": "https://spmbjatim.net/",
-      "openCount": 0,
+      "updatedAt": "2026-11-12T07:55:30.214Z",
       "allowedRoles": [
         "SUPER_ADMIN",
         "ADMIN",
@@ -245,131 +241,148 @@
         "SISWA",
         "UMUM"
       ],
+      "badge": "spmb",
+      "createdAt": "2026-11-10T12:25:47.231Z",
+      "sortOrder": 9,
+      "categoryId": "cat-1794299399575",
+      "isActive": true,
       "description": "jalur publik/informasi spmb smkn 1 tegalsari",
       "iconName": "Users",
       "name": "Portal SPMB (SISTEM PENERIMAAN MURID BARU) 2026",
-      "createdAt": "2026-11-10T12:25:47.231Z",
-      "categoryId": "cat-1794299399575"
+      "openCount": 0
     },
     {
       "id": "app-1794313952151",
-      "sortOrder": 10,
+      "isActive": true,
+      "targetUrl": "https://www.appsheet.com/start/d0205ad1-d1a0-4c84-a9eb-af78104e0a58",
+      "updatedAt": "2026-11-12T07:55:30.214Z",
+      "badge": "SITATIB",
       "allowedRoles": [
         "SUPER_ADMIN",
         "ADMIN",
         "SISWA",
         "GURU"
       ],
-      "updatedAt": "2026-11-12T01:16:33.826Z",
       "iconName": "FolderCheck",
-      "categoryId": "cat-1794299416680",
-      "openCount": 0,
       "name": "SITATIB SEMAKASARI",
-      "badge": "SITATIB",
-      "description": "Pencatatan pelanggaran dan prestasi siswa",
-      "targetUrl": "https://www.appsheet.com/start/d0205ad1-d1a0-4c84-a9eb-af78104e0a58",
+      "categoryId": "cat-1794299416680",
       "createdAt": "2026-11-10T12:32:32.151Z",
-      "isActive": true
+      "sortOrder": 10,
+      "description": "Pencatatan pelanggaran dan prestasi siswa",
+      "openCount": 0
     },
     {
       "id": "app-1794314016995",
-      "isActive": true,
-      "updatedAt": "2026-11-12T01:16:33.826Z",
-      "name": "E-SISKA SEMAKASARI",
-      "sortOrder": 11,
-      "badge": "E-SISKA",
-      "description": "SISTEM IZIN KELUAR SEKOLAH SMKN 1 TEGALSARI",
       "allowedRoles": [
         "SUPER_ADMIN",
         "ADMIN",
         "GURU",
         "SISWA"
       ],
-      "iconName": "Laptop",
+      "sortOrder": 11,
       "createdAt": "2026-11-10T12:33:36.995Z",
-      "openCount": 0,
+      "iconName": "Laptop",
+      "updatedAt": "2026-11-12T07:55:30.214Z",
       "targetUrl": "https://sites.google.com/guru.smk.belajar.id/esiska/halaman-muka",
+      "isActive": true,
+      "name": "E-SISKA SEMAKASARI",
+      "description": "SISTEM IZIN KELUAR SEKOLAH SMKN 1 TEGALSARI",
+      "openCount": 0,
+      "badge": "E-SISKA",
       "categoryId": "cat-1794299416680"
     },
     {
       "id": "app-1794315311558",
-      "badge": "dasboard presensi",
-      "description": "Dashboard Presensi, Keterlambatan & Rekap Sholat Siswa",
-      "allowedRoles": [
-        "SUPER_ADMIN",
-        "ADMIN",
-        "SISWA",
-        "GURU"
-      ],
-      "sortOrder": 12,
-      "name": "Dashboard Presensi, Keterlambatan & Rekap Sholat Siswa",
       "categoryId": "cat-1794299416680",
+      "openCount": 0,
+      "iconName": "Users",
       "isActive": true,
-      "updatedAt": "2026-11-12T03:58:23.685Z",
-      "targetUrl": "https://sites.google.com/guru.smk.belajar.id/sisteminformasimonitoringabsen/halaman-muka",
-      "openCount": 0,
-      "createdAt": "2026-11-10T12:55:11.558Z",
-      "iconName": "Users"
-    },
-    {
-      "id": "app-1794315421553",
-      "name": "SIMONPIK SMKN 1 TEGALSARI",
-      "createdAt": "2026-11-10T12:57:01.553Z",
-      "iconName": "Laptop",
-      "targetUrl": "https://simonpik-smkn1tegalsari.lovable.app/login",
-      "openCount": 0,
       "allowedRoles": [
         "SUPER_ADMIN",
         "ADMIN",
         "GURU",
         "SISWA"
       ],
-      "categoryId": "cat-1794309451761",
-      "isActive": true,
-      "updatedAt": "2026-11-12T01:16:33.826Z",
-      "description": "Sistem Monitoring Guru Piket SMKN 1 Tegalsari",
+      "sortOrder": 12,
+      "createdAt": "2026-11-10T12:55:11.558Z",
+      "name": "Dashboard Presensi, Keterlambatan & Rekap Sholat Siswa",
+      "targetUrl": "https://sites.google.com/guru.smk.belajar.id/sisteminformasimonitoringabsen/halaman-muka",
+      "badge": "dasboard presensi",
+      "description": "Dashboard Presensi, Keterlambatan & Rekap Sholat Siswa",
+      "updatedAt": "2026-11-12T07:55:30.214Z"
+    },
+    {
+      "id": "app-1794315421553",
+      "allowedRoles": [
+        "SUPER_ADMIN",
+        "ADMIN",
+        "GURU",
+        "SISWA"
+      ],
+      "openCount": 0,
       "badge": "simonpik",
-      "sortOrder": 13
+      "isActive": true,
+      "sortOrder": 13,
+      "createdAt": "2026-11-10T12:57:01.553Z",
+      "description": "Sistem Monitoring Guru Piket SMKN 1 Tegalsari",
+      "targetUrl": "https://simonpik-smkn1tegalsari.lovable.app/login",
+      "iconName": "Laptop",
+      "updatedAt": "2026-11-12T07:55:30.214Z",
+      "name": "SIMONPIK SMKN 1 TEGALSARI",
+      "categoryId": "cat-1794309451761"
     }
   ],
   "categories": [
     {
       "id": "cat-1794205545810",
-      "description": "Sistem yang mencakup manajemen kegiatan belajar mengajar, perangkat ajar, penilaian, dan evaluasi akademik.",
+      "createdAt": "2026-11-09T06:25:45.810Z",
       "sortOrder": 1,
-      "name": "Kurikulum & Pembelajaran",
-      "createdAt": "2026-11-09T06:25:45.810Z"
+      "description": "Sistem yang mencakup manajemen kegiatan belajar mengajar, perangkat ajar, penilaian, dan evaluasi akademik.",
+      "name": "Kurikulum & Pembelajaran"
     },
     {
       "id": "cat-1794299399575",
       "sortOrder": 2,
-      "name": "Hubungan Masyarakat & Publikasi",
       "createdAt": "2026-11-10T08:29:59.575Z",
+      "name": "Hubungan Masyarakat & Publikasi",
       "description": "Sistem yang mengelola komunikasi eksternal, informasi publik, pelacakan alumni, serta kemitraan dengan dunia industri atau instansi lain."
     },
     {
       "id": "cat-1794299416680",
+      "createdAt": "2026-11-10T08:30:16.680Z",
       "sortOrder": 3,
       "description": "Sistem untuk memantau data diri siswa, kehadiran, prestasi, pelanggaran (bimbingan konseling), serta kegiatan ekstrakurikuler.",
-      "createdAt": "2026-11-10T08:30:16.680Z",
       "name": "Kesiswaan & Ekstrakurikuler"
     },
     {
       "id": "cat-1794299798829",
-      "name": "Sarana & Prasarana (Sarpras)",
       "createdAt": "2026-11-10T08:36:38.829Z",
       "sortOrder": 4,
+      "name": "Sarana & Prasarana (Sarpras)",
       "description": "Sistem inventarisasi aset sekolah, pengelolaan fasilitas fisik, pemeliharaan gedung, serta peminjaman barang/ruangan.\n\nContoh Aplikasi Terkait:\n\nAplikasi Inventaris Barang Sekolah (Barang Milik Sekolah / BMN)\n\nSistem Tiket Pemeliharaan / Perbaikan Fasilitas (Maintenance Ticketing)\n\nManajemen Peminjaman Ruangan Lab & Alat\n\nBuku Inventaris Perpustakaan"
     },
     {
       "id": "cat-1794309451761",
       "name": "Tata Usaha & Administrasi Umum",
-      "description": "Sistem yang berfokus pada administrasi perkantoran, manajemen SDM/kepegawaian, surat-menyurat, serta arsip digital sekolah.\n\nContoh Aplikasi Terkait:\n\nSistem Informasi Kepegawaian (SIMPEG) & Absensi Guru/Karyawan\n\nAplikasi E-Arsip & Pengelolaan Surat Masuk/Keluar (Tata Naskah Dinas)\n\nSistem Penggajian (Payroll) & Keuangan Internal\n\nLayanan Legalisir / Surat Keterangan Online untuk Siswa/Alumni",
       "sortOrder": 5,
-      "createdAt": "2026-11-10T11:17:31.761Z"
+      "createdAt": "2026-11-10T11:17:31.761Z",
+      "description": "Sistem yang berfokus pada administrasi perkantoran, manajemen SDM/kepegawaian, surat-menyurat, serta arsip digital sekolah.\n\nContoh Aplikasi Terkait:\n\nSistem Informasi Kepegawaian (SIMPEG) & Absensi Guru/Karyawan\n\nAplikasi E-Arsip & Pengelolaan Surat Masuk/Keluar (Tata Naskah Dinas)\n\nSistem Penggajian (Payroll) & Keuangan Internal\n\nLayanan Legalisir / Surat Keterangan Online untuk Siswa/Alumni"
     }
   ],
   "accessLogs": [
+    {
+      "id": "log-1794546008563-6pwqw",
+      "userId": "guest-umum",
+      "username": "pengguna.umum",
+      "role": "UMUM",
+      "action": "OPEN_APP",
+      "details": "Membuka aplikasi publik Website Resmi Sekolah & Portal Berita (Peran UMUM tanpa login)",
+      "targetAppId": "app-1794313339544",
+      "targetAppName": "Website Resmi Sekolah & Portal Berita",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "Unknown-Device",
+      "timestamp": "2026-11-13T05:00:08.563Z"
+    },
     {
       "id": "log-1794468987402-jed6k",
       "userId": "guest-umum",

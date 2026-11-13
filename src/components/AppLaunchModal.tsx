@@ -128,13 +128,6 @@ export const AppLaunchModal: React.FC<AppLaunchModalProps> = ({
 
   if (!isOpen || !app) return null;
 
-  const handleLaunchTarget = () => {
-    if (targetUrl) {
-      window.open(targetUrl, '_blank', 'noopener,noreferrer');
-      onClose();
-    }
-  };
-
   const handleCopyUrl = () => {
     if (targetUrl) {
       navigator.clipboard.writeText(targetUrl);
@@ -240,14 +233,16 @@ export const AppLaunchModal: React.FC<AppLaunchModalProps> = ({
                 >
                   Tutup
                 </button>
-                <button
-                  type="button"
-                  onClick={handleLaunchTarget}
+                <a
+                  href={targetUrl || app.targetUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => setTimeout(onClose, 150)}
                   className="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-xs shadow-md shadow-emerald-700/20 flex items-center justify-center gap-2 transition-all cursor-pointer"
                 >
                   <span>BUKA APLIKASI SEKARANG</span>
                   <ArrowUpRight className="w-4 h-4" />
-                </button>
+                </a>
               </div>
             </div>
           )}

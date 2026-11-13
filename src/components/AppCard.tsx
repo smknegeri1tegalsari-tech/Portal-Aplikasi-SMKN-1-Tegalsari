@@ -196,35 +196,52 @@ export const AppCard: React.FC<AppCardProps> = ({
         </div>
 
         {/* Action Button: BUKA APLIKASI */}
-        <button
-          type="button"
-          onClick={() => onOpenApp(app)}
-          disabled={!app.isActive && !isManager}
-          className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
-            !app.isActive && !isManager
-              ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
-              : !currentUser || hasAccess
-              ? 'bg-gradient-to-r from-emerald-600 via-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-md shadow-emerald-700/20 active:scale-[0.98]'
-              : 'bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300'
-          }`}
-        >
-          {!currentUser ? (
-            <>
-              <span>BUKA APLIKASI</span>
-              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-            </>
-          ) : hasAccess ? (
-            <>
-              <span>BUKA APLIKASI</span>
-              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-            </>
-          ) : (
-            <>
-              <Lock className="w-3.5 h-3.5" />
-              <span>AJUKAN AKSES</span>
-            </>
-          )}
-        </button>
+        {app.isActive && isPublicApp && (!currentUser || currentUser.role === 'UMUM') ? (
+          <a
+            href={
+              app.targetUrl.startsWith('http://') || app.targetUrl.startsWith('https://')
+                ? app.targetUrl
+                : `https://${app.targetUrl}`
+            }
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => onOpenApp(app)}
+            className="w-full py-2.5 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer bg-gradient-to-r from-emerald-600 via-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-md shadow-emerald-700/20 active:scale-[0.98]"
+          >
+            <span>BUKA APLIKASI (TANPA LOGIN)</span>
+            <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+          </a>
+        ) : (
+          <button
+            type="button"
+            onClick={() => onOpenApp(app)}
+            disabled={!app.isActive && !isManager}
+            className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
+              !app.isActive && !isManager
+                ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                : !currentUser || hasAccess
+                ? 'bg-gradient-to-r from-emerald-600 via-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-md shadow-emerald-700/20 active:scale-[0.98]'
+                : 'bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300'
+            }`}
+          >
+            {!currentUser ? (
+              <>
+                <span>BUKA APLIKASI</span>
+                <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+              </>
+            ) : hasAccess ? (
+              <>
+                <span>BUKA APLIKASI</span>
+                <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+              </>
+            ) : (
+              <>
+                <Lock className="w-3.5 h-3.5" />
+                <span>AJUKAN AKSES</span>
+              </>
+            )}
+          </button>
+        )}
       </div>
     </div>
   );
